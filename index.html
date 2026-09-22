@@ -526,7 +526,7 @@
             </label>
             <label>
               Tenant price / month
-              <input id="basePrice" type="number" min="0" step="1" value="1700" readonly>
+              <input id="basePrice" type="text" inputmode="decimal" value="$1,700" data-currency readonly>
             </label>
             <label>
               Included interacted people
@@ -589,12 +589,12 @@
                 <tr>
                   <td>Interacted people</td>
                   <td><input id="interactedPackSize" type="number" min="1" step="100" value="5000"></td>
-                  <td><input id="interactedPackPrice" type="number" min="0" step="1" value="250"></td>
+                  <td><input id="interactedPackPrice" type="text" inputmode="decimal" value="$250" data-currency></td>
                 </tr>
                 <tr>
                   <td>Unified people/profiles</td>
                   <td><input id="unifiedPackSize" type="number" min="1" step="1000" value="100000"></td>
-                  <td><input id="unifiedPackPrice" type="number" min="0" step="1" value="1000"></td>
+                  <td><input id="unifiedPackPrice" type="text" inputmode="decimal" value="$1,000" data-currency></td>
                 </tr>
               </tbody>
             </table>
@@ -687,12 +687,20 @@
     const el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
 
     function numberValue(id, fallback = 0) {
-      const value = Number(document.getElementById(id).value);
+      const input = document.getElementById(id);
+      const rawValue = input.hasAttribute("data-currency")
+        ? input.value.replace(/[$,\s]/g, "")
+        : input.value;
+      const value = Number(rawValue);
       return Number.isFinite(value) ? value : fallback;
     }
 
     function money(value) {
       return fmtCurrency.format(Math.max(0, value || 0));
+    }
+
+    function formatCurrencyInput(input, value = numberValue(input.id)) {
+      input.value = money(value);
     }
 
     function safeCeil(value) {
@@ -743,7 +751,7 @@
       const monthlyTotal = tenantCost + interactedCalc.cost + unifiedCalc.cost;
       const months = Math.max(1, numberValue("months", 12));
 
-      el.basePrice.value = tenantCost;
+      formatCurrencyInput(el.basePrice, tenantCost);
       document.getElementById("tenantPriceTotal").textContent = money(tenantCost);
       document.getElementById("includedInteractedTotal").textContent = fmtNumber.format(includedInteracted);
       document.getElementById("includedUnifiedTotal").textContent = fmtNumber.format(includedUnified);
@@ -777,6 +785,13 @@
         input.addEventListener("change", calculate);
       });
 
+      document.querySelectorAll("[data-currency]").forEach((input) => {
+        input.addEventListener("blur", () => {
+          formatCurrencyInput(input);
+          calculate();
+        });
+      });
+
       document.getElementById("resetDefaults").addEventListener("click", () => {
         channels.forEach((channel) => {
           document.getElementById(`${channel.id}Interactions`).value = channel.interactions;
@@ -793,6 +808,8 @@
         el.interactedPackPrice.value = 250;
         el.unifiedPackSize.value = 100000;
         el.unifiedPackPrice.value = 1000;
+        formatCurrencyInput(el.interactedPackPrice);
+        formatCurrencyInput(el.unifiedPackPrice);
         calculate();
       });
 
