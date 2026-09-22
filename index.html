@@ -157,6 +157,30 @@
       white-space: nowrap;
     }
 
+    .people-guide {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .people-guide-item {
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      background: var(--cp-surface);
+      padding: 18px;
+    }
+
+    .people-guide-item h2 {
+      margin-bottom: 6px;
+      color: var(--cp-accent);
+    }
+
+    .people-guide-item p {
+      margin-bottom: 0;
+      color: var(--cp-text-muted);
+    }
+
     .brand {
       display: inline-flex;
       align-items: center;
@@ -473,7 +497,8 @@
     @media (max-width: 680px) {
       .form-grid,
       .metric-grid,
-      .entitlement-grid {
+      .entitlement-grid,
+      .people-guide {
         grid-template-columns: 1fr;
       }
     }
@@ -492,6 +517,17 @@
         <p class="lede">Estimate monthly Dynamics 365 Customer Insights cost using simple tenant pricing plus capacity add-on packs. Enter the customer’s usage, review overages, and use the result as a directional estimate before validating against the final Microsoft quote.</p>
       </div>
       <div class="badge">USD list-price model</div>
+    </section>
+
+    <section class="people-guide" aria-label="People capacity definitions">
+      <div class="people-guide-item">
+        <h2>Interacted people</h2>
+        <p>Unique people who engage with or are reached through Customer Insights - Journeys channels, such as email, SMS, push, forms, or events.</p>
+      </div>
+      <div class="people-guide-item">
+        <h2>Unified people</h2>
+        <p>Distinct customer profiles created in Customer Insights - Data after records from multiple sources are combined and deduplicated.</p>
+      </div>
     </section>
 
     <section class="grid">
@@ -522,7 +558,7 @@
             </label>
             <label>
               Billing months
-              <input id="months" type="number" min="1" step="1" value="12">
+              <input id="months" type="text" inputmode="numeric" value="12" data-number data-min="1">
             </label>
             <label>
               Tenant price / month
@@ -530,11 +566,11 @@
             </label>
             <label>
               Included interacted people
-              <input id="includedInteracted" type="number" min="0" step="100" value="10000" readonly>
+              <input id="includedInteracted" type="text" inputmode="numeric" value="10,000" data-number data-min="0" readonly>
             </label>
             <label>
               Included unified people/profiles
-              <input id="includedUnified" type="number" min="0" step="100" value="100000" readonly>
+              <input id="includedUnified" type="text" inputmode="numeric" value="100,000" data-number data-min="0" readonly>
             </label>
           </div>
         </section>
@@ -558,7 +594,7 @@
           <div class="form-grid" style="margin-top: 16px;">
             <label>
               Known monthly interacted people override
-              <input id="interactedOverride" type="number" min="0" step="100" placeholder="Leave blank to use estimate">
+              <input id="interactedOverride" type="text" inputmode="numeric" data-number data-min="0" placeholder="Leave blank to use estimate">
             </label>
           </div>
         </section>
@@ -568,7 +604,7 @@
           <div class="form-grid">
             <label>
               Unified profiles / people
-              <input id="unifiedProfiles" type="number" min="0" step="1000" value="0">
+              <input id="unifiedProfiles" type="text" inputmode="numeric" value="0" data-number data-min="0">
             </label>
           </div>
         </section>
@@ -588,12 +624,12 @@
               <tbody>
                 <tr>
                   <td>Interacted people</td>
-                  <td><input id="interactedPackSize" type="number" min="1" step="100" value="5000"></td>
+                  <td><input id="interactedPackSize" type="text" inputmode="numeric" value="5,000" data-number data-min="1"></td>
                   <td><input id="interactedPackPrice" type="text" inputmode="decimal" value="$250" data-currency></td>
                 </tr>
                 <tr>
                   <td>Unified people/profiles</td>
-                  <td><input id="unifiedPackSize" type="number" min="1" step="1000" value="100000"></td>
+                  <td><input id="unifiedPackSize" type="text" inputmode="numeric" value="100,000" data-number data-min="1"></td>
                   <td><input id="unifiedPackPrice" type="text" inputmode="decimal" value="$1,000" data-currency></td>
                 </tr>
               </tbody>
@@ -688,9 +724,7 @@
 
     function numberValue(id, fallback = 0) {
       const input = document.getElementById(id);
-      const rawValue = input.hasAttribute("data-currency")
-        ? input.value.replace(/[$,\s]/g, "")
-        : input.value;
+      const rawValue = input.value.replace(/[$,\s]/g, "");
       const value = Number(rawValue);
       return Number.isFinite(value) ? value : fallback;
     }
@@ -703,6 +737,17 @@
       input.value = money(value);
     }
 
+    function formatNumberInput(input, value = numberValue(input.id)) {
+      if (input.value.trim() === "") {
+        return;
+      }
+
+      const minimum = input.hasAttribute("data-min") ? Number(input.dataset.min) : -Infinity;
+      const maximumFractionDigits = Number(input.dataset.maxFractionDigits || 0);
+      input.value = new Intl.NumberFormat("en-US", { maximumFractionDigits })
+        .format(Math.max(minimum, value));
+    }
+
     function safeCeil(value) {
       return value <= 0 ? 0 : Math.ceil(value);
     }
@@ -711,8 +756,8 @@
       document.getElementById("channelRows").innerHTML = channels.map((channel) => `
         <tr>
           <td>${channel.label}</td>
-          <td><input id="${channel.id}Interactions" type="number" min="0" step="100" value="${channel.interactions}"></td>
-          <td><input id="${channel.id}Avg" type="number" min="0.01" step="0.1" value="${channel.avg}"></td>
+          <td><input id="${channel.id}Interactions" type="text" inputmode="numeric" value="${fmtNumber.format(channel.interactions)}" data-number data-min="0"></td>
+          <td><input id="${channel.id}Avg" type="text" inputmode="decimal" value="${channel.avg}" data-number data-min="0.01" data-max-fraction-digits="2"></td>
           <td class="amount" id="${channel.id}People">0</td>
         </tr>
       `).join("");
@@ -792,6 +837,13 @@
         });
       });
 
+      document.querySelectorAll("[data-number]").forEach((input) => {
+        input.addEventListener("blur", () => {
+          formatNumberInput(input);
+          calculate();
+        });
+      });
+
       document.getElementById("resetDefaults").addEventListener("click", () => {
         channels.forEach((channel) => {
           document.getElementById(`${channel.id}Interactions`).value = channel.interactions;
@@ -810,6 +862,7 @@
         el.unifiedPackPrice.value = 1000;
         formatCurrencyInput(el.interactedPackPrice);
         formatCurrencyInput(el.unifiedPackPrice);
+        document.querySelectorAll("[data-number]").forEach((input) => formatNumberInput(input));
         calculate();
       });
 
