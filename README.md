@@ -1,6 +1,6 @@
 # Customer Insights pricing tool
 
-Public site: https://tommylthai.github.io/dynamics-cij-pricing-tool/
+Public site: https://tommylthai.github.io/dynamics-customer-insights-pricing-tool/
 
 This repository publishes a static Dynamics 365 Customer Insights pricing estimator through GitHub Pages.
 
