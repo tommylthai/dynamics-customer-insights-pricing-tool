@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Insights Journeys/Data Pricing Tool</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--cp-bg);
+      color: var(--cp-text);
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.45;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .app {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 32px 20px 56px;
+    }
+
+    .disclaimer-banner {
+      background: var(--cp-danger);
+      color: var(--cp-accent-fg);
+      padding: 12px 20px;
+      text-align: center;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      border: 1px solid var(--cp-border);
+      border-radius: 20px;
+      background: var(--cp-surface);
+      box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14);
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      letter-spacing: -0.05em;
+      line-height: 0.98;
+    }
+
+    h2 {
+      margin-bottom: 16px;
+      font-size: 1.15rem;
+    }
+
+    h3 {
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+
+    .lede {
+      max-width: 780px;
+      margin-bottom: 0;
+      color: var(--cp-text-muted);
+      font-size: 1.05rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      border: 1px solid var(--cp-border);
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: var(--cp-accent-soft);
+      color: var(--cp-text);
+      font-size: 0.88rem;
+      white-space: nowrap;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      color: var(--cp-text-muted);
+      font-weight: 700;
+    }
+
+    .brand-mark {
+      display: grid;
+      grid-template-columns: repeat(2, 10px);
+      grid-template-rows: repeat(2, 10px);
+      gap: 3px;
+    }
+
+    .brand-mark span {
+      display: block;
+      border-radius: 2px;
+      background: var(--cp-accent);
+    }
+
+    .brand-mark span:nth-child(2) {
+      background: var(--cp-success);
+    }
+
+    .brand-mark span:nth-child(3) {
+      background: var(--cp-link);
+    }
+
+    .brand-mark span:nth-child(4) {
+      background: var(--cp-warning);
+    }
+
+    .entitlement-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .entitlement {
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      background: var(--cp-bg-elevated);
+      padding: 14px;
+    }
+
+    .entitlement span {
+      display: block;
+      color: var(--cp-text-muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .entitlement strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 1.25rem;
+    }
+
+    .assumption-note {
+      margin-top: 12px;
+      color: var(--cp-text-soft);
+      font-size: 0.86rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .stack {
+      display: grid;
+      gap: 20px;
+    }
+
+    .card {
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      background: var(--cp-surface);
+      box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14);
+      padding: 20px;
+    }
+
+    .summary-card {
+      position: sticky;
+      top: 20px;
+      background: var(--cp-panel-strong);
+      border-color: var(--cp-border-strong);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--cp-text-muted);
+      font-size: 0.86rem;
+      font-weight: 600;
+    }
+
+    .label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      background: var(--cp-bg-elevated);
+      color: var(--cp-text);
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--cp-accent);
+      box-shadow: 0 0 0 3px var(--cp-accent-soft);
+    }
+
+    input[readonly] {
+      border-color: var(--cp-border);
+      background: var(--cp-surface-soft);
+      color: var(--cp-text-muted);
+      cursor: not-allowed;
+    }
+
+    .small {
+      color: var(--cp-text-soft);
+      font-size: 0.82rem;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--cp-border);
+      padding: 10px 8px;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      color: var(--cp-text-muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    td input {
+      min-width: 96px;
+      padding: 8px 10px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      background: var(--cp-surface-soft);
+      padding: 14px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--cp-text-muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 6px;
+      font-size: clamp(1.25rem, 2.2vw, 1.8rem);
+      line-height: 1.05;
+    }
+
+    .result-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--cp-border);
+      padding: 10px 0;
+    }
+
+    .result-row:last-child {
+      border-bottom: 0;
+    }
+
+    .amount {
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .total {
+      margin-top: 14px;
+      border: 1px solid var(--cp-border-strong);
+      border-radius: 16px;
+      background: var(--cp-accent-soft);
+      padding: 18px;
+    }
+
+    .total .amount {
+      display: block;
+      margin-top: 4px;
+      color: var(--cp-accent);
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button {
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      background: var(--cp-surface-soft);
+      color: var(--cp-text);
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    button.primary {
+      border-color: var(--cp-accent);
+      background: var(--cp-accent);
+      color: var(--cp-accent-fg);
+    }
+
+    button:hover {
+      border-color: var(--cp-border-strong);
+    }
+
+    button.primary:hover {
+      background: var(--cp-accent-hover);
+    }
+
+    .notice {
+      border-left: 4px solid var(--cp-warning);
+      border-radius: 0.625rem;
+      background: var(--cp-surface-soft);
+      padding: 12px 14px;
+      color: var(--cp-text-muted);
+    }
+
+    .source-list {
+      margin-bottom: 0;
+      padding-left: 18px;
+      color: var(--cp-text-muted);
+    }
+
+    .source-list a {
+      color: var(--cp-link);
+    }
+
+    .mono {
+      font-family: Consolas, "Courier New", Courier, monospace;
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-card {
+        position: static;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .form-grid,
+      .metric-grid,
+      .entitlement-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="disclaimer-banner">Not an official Microsoft tool. Strictly used for estimation purposes only.</div>
+  <main class="app">
+    <section class="hero">
+      <div>
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+          <span>Microsoft Dynamics 365 Customer Insights</span>
+        </div>
+        <h1>Customer Insights pricing tool</h1>
+        <p class="lede">Estimate monthly Dynamics 365 Customer Insights cost using simple tenant pricing plus capacity add-on packs. Enter the customer’s usage, review overages, and use the result as a directional estimate before validating against the final Microsoft quote.</p>
+      </div>
+      <div class="badge">USD list-price model</div>
+    </section>
+
+    <section class="grid">
+      <div class="stack">
+        <section class="card">
+          <h2>1. Tenant license</h2>
+          <div class="entitlement-grid">
+            <div class="entitlement">
+              <span>Included interacted people</span>
+              <strong id="includedInteractedTotal">10,000</strong>
+            </div>
+            <div class="entitlement">
+              <span>Included unified people</span>
+              <strong id="includedUnifiedTotal">100,000</strong>
+            </div>
+            <div class="entitlement">
+              <span>Monthly tenant price</span>
+              <strong id="tenantPriceTotal">$1,700</strong>
+            </div>
+          </div>
+          <div class="form-grid">
+            <label>
+              Tenant license type
+              <select id="licenseType">
+                <option value="standalone" data-price="1700">Customer Insights</option>
+                <option value="attach" data-price="1000">Customer Insights Attach</option>
+              </select>
+            </label>
+            <label>
+              Billing months
+              <input id="months" type="number" min="1" step="1" value="12">
+            </label>
+            <label>
+              Tenant price / month
+              <input id="basePrice" type="number" min="0" step="1" value="1700" readonly>
+            </label>
+            <label>
+              Included interacted people
+              <input id="includedInteracted" type="number" min="0" step="100" value="10000" readonly>
+            </label>
+            <label>
+              Included unified people/profiles
+              <input id="includedUnified" type="number" min="0" step="100" value="100000" readonly>
+            </label>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>2. Journey interaction inputs</h2>
+          <p class="small">Enter customer-provided usage. For best accuracy, use the known unique monthly interacted people count in the override field. If you leave it blank, the tool estimates people from each channel and may double-count people who interact across multiple channels.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Channel</th>
+                  <th>Monthly interactions</th>
+                  <th>Avg interactions / person</th>
+                  <th>Estimated people</th>
+                </tr>
+              </thead>
+              <tbody id="channelRows"></tbody>
+            </table>
+          </div>
+          <div class="form-grid" style="margin-top: 16px;">
+            <label>
+              Known monthly interacted people override
+              <input id="interactedOverride" type="number" min="0" step="100" placeholder="Leave blank to use estimate">
+            </label>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>3. Data/unified profile inputs</h2>
+          <div class="form-grid">
+            <label>
+              Unified profiles / people
+              <input id="unifiedProfiles" type="number" min="0" step="1000" value="0">
+            </label>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>4. Add-on pack assumptions</h2>
+          <p class="small">Capacity add-ons are calculated in whole packs when usage exceeds the included tenant capacity. Update these only if the customer quote uses different pack pricing.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Capacity</th>
+                  <th>Pack size</th>
+                  <th>Pack price / month</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Interacted people</td>
+                  <td><input id="interactedPackSize" type="number" min="1" step="100" value="5000"></td>
+                  <td><input id="interactedPackPrice" type="number" min="0" step="1" value="250"></td>
+                </tr>
+                <tr>
+                  <td>Unified people/profiles</td>
+                  <td><input id="unifiedPackSize" type="number" min="1" step="1000" value="100000"></td>
+                  <td><input id="unifiedPackPrice" type="number" min="0" step="1" value="1000"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Sources and assumptions</h2>
+          <div class="notice">
+            This is an estimator, not a quote. It excludes taxes, discounts, regional currency variations, SMS/telecom pass-through charges, and any separate Dynamics 365 app licenses.
+          </div>
+          <ul class="source-list">
+            <li>Microsoft public pricing page for Dynamics 365 Customer Insights: <a href="https://www.microsoft.com/en-us/dynamics-365/products/customer-insights/pricing" target="_blank" rel="noreferrer">microsoft.com Dynamics 365 Customer Insights pricing</a>.</li>
+            <li>Tenant license assumptions: Customer Insights <span class="mono">$1,700/month</span> or Customer Insights Attach <span class="mono">$1,000/month</span>, with <span class="mono">10,000</span> interacted people and <span class="mono">100,000</span> unified people included. Attach pricing requires a qualifying Dynamics 365 application.</li>
+            <li>Add-on assumptions: interacted people pack <span class="mono">5,000</span> at <span class="mono">$250/month</span>; unified people pack <span class="mono">100,000</span> at <span class="mono">$1,000/month</span>. Customer usage starts at <span class="mono">0</span>.</li>
+            <li>Raw emails/texts/push sends are converted to estimated interacted people using average interactions per person. If the customer provides a known interacted-people count, use the override field.</li>
+          </ul>
+        </section>
+      </div>
+
+      <aside class="card summary-card">
+        <h2>Cost estimate</h2>
+        <div class="metric-grid">
+          <div class="metric">
+            <span>Interacted people</span>
+            <strong id="interactedPeopleOut">0</strong>
+          </div>
+          <div class="metric">
+            <span>Unified profiles</span>
+            <strong id="unifiedProfilesOut">0</strong>
+          </div>
+          <div class="metric">
+            <span>Add-on packs</span>
+            <strong id="packsOut">0</strong>
+          </div>
+        </div>
+        <ul class="result-list">
+          <li class="result-row">
+            <span>Tenant license</span>
+            <span class="amount" id="tenantCostOut">$0</span>
+          </li>
+          <li class="result-row">
+            <span>Interacted people add-ons</span>
+            <span class="amount" id="interactedAddOnOut">$0</span>
+          </li>
+          <li class="result-row">
+            <span>Unified profile add-ons</span>
+            <span class="amount" id="unifiedAddOnOut">$0</span>
+          </li>
+        </ul>
+        <div class="total">
+          <span>Estimated monthly total</span>
+          <span class="amount" id="monthlyOut">$0</span>
+          <p class="small" id="termOut" style="margin: 8px 0 0;"></p>
+        </div>
+        <div class="actions">
+          <button class="primary" id="copySummary">Copy summary</button>
+          <button id="resetDefaults">Reset defaults</button>
+        </div>
+        <p class="small" id="methodOut" style="margin: 14px 0 0;"></p>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const channels = [
+      { id: "email", label: "Email", interactions: 0, avg: 1 },
+      { id: "sms", label: "Text/SMS", interactions: 0, avg: 1 },
+      { id: "push", label: "Push/in-app", interactions: 0, avg: 1 },
+      { id: "custom", label: "Custom/other", interactions: 0, avg: 1 }
+    ];
+
+    const fmtCurrency = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0
+    });
+
+    const fmtNumber = new Intl.NumberFormat("en-US", {
+      maximumFractionDigits: 0
+    });
+
+    const ids = [
+      "licenseType", "months", "basePrice", "includedInteracted",
+      "includedUnified", "interactedOverride", "unifiedProfiles",
+      "interactedPackSize", "interactedPackPrice", "unifiedPackSize",
+      "unifiedPackPrice"
+    ];
+
+    const el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
+
+    function numberValue(id, fallback = 0) {
+      const value = Number(document.getElementById(id).value);
+      return Number.isFinite(value) ? value : fallback;
+    }
+
+    function money(value) {
+      return fmtCurrency.format(Math.max(0, value || 0));
+    }
+
+    function safeCeil(value) {
+      return value <= 0 ? 0 : Math.ceil(value);
+    }
+
+    function renderRows() {
+      document.getElementById("channelRows").innerHTML = channels.map((channel) => `
+        <tr>
+          <td>${channel.label}</td>
+          <td><input id="${channel.id}Interactions" type="number" min="0" step="100" value="${channel.interactions}"></td>
+          <td><input id="${channel.id}Avg" type="number" min="0.01" step="0.1" value="${channel.avg}"></td>
+          <td class="amount" id="${channel.id}People">0</td>
+        </tr>
+      `).join("");
+
+    }
+
+    function calculatePackCost(overage, packSize, packPrice) {
+      const packs = safeCeil(overage / Math.max(1, packSize));
+      return { cost: packs * packPrice, units: packs };
+    }
+
+    function getChannelInputs() {
+      return channels.map((channel) => {
+        const interactions = numberValue(`${channel.id}Interactions`);
+        const avg = Math.max(0.01, numberValue(`${channel.id}Avg`, 1));
+        const people = Math.ceil(interactions / avg);
+        document.getElementById(`${channel.id}People`).textContent = fmtNumber.format(people);
+        return { ...channel, interactions, avg, people };
+      });
+    }
+
+    function calculate() {
+      const channelInputs = getChannelInputs();
+      const estimatedPeople = channelInputs.reduce((sum, channel) => sum + channel.people, 0);
+      const override = el.interactedOverride.value === "" ? null : numberValue("interactedOverride");
+      const interactedPeople = override === null ? estimatedPeople : override;
+      const unifiedProfiles = numberValue("unifiedProfiles");
+      const includedInteracted = numberValue("includedInteracted");
+      const includedUnified = numberValue("includedUnified");
+      const interactedOverage = Math.max(0, interactedPeople - includedInteracted);
+      const unifiedOverage = Math.max(0, unifiedProfiles - includedUnified);
+      const selectedLicense = el.licenseType.options[el.licenseType.selectedIndex];
+      const tenantCost = Number(selectedLicense.dataset.price || 0);
+      const interactedCalc = calculatePackCost(interactedOverage, numberValue("interactedPackSize", 1), numberValue("interactedPackPrice"));
+      const unifiedCalc = calculatePackCost(unifiedOverage, numberValue("unifiedPackSize", 1), numberValue("unifiedPackPrice"));
+      const monthlyTotal = tenantCost + interactedCalc.cost + unifiedCalc.cost;
+      const months = Math.max(1, numberValue("months", 12));
+
+      el.basePrice.value = tenantCost;
+      document.getElementById("tenantPriceTotal").textContent = money(tenantCost);
+      document.getElementById("includedInteractedTotal").textContent = fmtNumber.format(includedInteracted);
+      document.getElementById("includedUnifiedTotal").textContent = fmtNumber.format(includedUnified);
+      document.getElementById("interactedPeopleOut").textContent = fmtNumber.format(interactedPeople);
+      document.getElementById("unifiedProfilesOut").textContent = fmtNumber.format(unifiedProfiles);
+      document.getElementById("packsOut").textContent = fmtNumber.format(interactedCalc.units + unifiedCalc.units);
+      document.getElementById("tenantCostOut").textContent = money(tenantCost);
+      document.getElementById("interactedAddOnOut").textContent = money(interactedCalc.cost);
+      document.getElementById("unifiedAddOnOut").textContent = money(unifiedCalc.cost);
+      document.getElementById("monthlyOut").textContent = money(monthlyTotal);
+      document.getElementById("termOut").textContent = `${months}-month estimate: ${money(monthlyTotal * months)}`;
+      document.getElementById("methodOut").textContent = `Using ${selectedLicense.textContent.trim()}; ${override === null ? "estimated interacted people from channel interactions" : "used interacted people override"}. Interacted overage: ${fmtNumber.format(interactedOverage)}. Unified overage: ${fmtNumber.format(unifiedOverage)}.`;
+
+      return {
+        interactedPeople,
+        unifiedProfiles,
+        interactedOverage,
+        unifiedOverage,
+        tenantCost,
+        licenseName: selectedLicense.textContent.trim(),
+        interactedCost: interactedCalc.cost,
+        unifiedCost: unifiedCalc.cost,
+        monthlyTotal,
+        months
+      };
+    }
+
+    function bindEvents() {
+      document.querySelectorAll("input, select").forEach((input) => {
+        input.addEventListener("input", calculate);
+        input.addEventListener("change", calculate);
+      });
+
+      document.getElementById("resetDefaults").addEventListener("click", () => {
+        channels.forEach((channel) => {
+          document.getElementById(`${channel.id}Interactions`).value = channel.interactions;
+          document.getElementById(`${channel.id}Avg`).value = channel.avg;
+        });
+        el.licenseType.value = "standalone";
+        el.months.value = 12;
+        el.basePrice.value = 1700;
+        el.includedInteracted.value = 10000;
+        el.includedUnified.value = 100000;
+        el.interactedOverride.value = "";
+        el.unifiedProfiles.value = 0;
+        el.interactedPackSize.value = 5000;
+        el.interactedPackPrice.value = 250;
+        el.unifiedPackSize.value = 100000;
+        el.unifiedPackPrice.value = 1000;
+        calculate();
+      });
+
+      document.getElementById("copySummary").addEventListener("click", async () => {
+        const result = calculate();
+        const summary = [
+          "Dynamics 365 Customer Insights pricing estimate",
+          `Monthly total: ${money(result.monthlyTotal)}`,
+          `${result.months}-month total: ${money(result.monthlyTotal * result.months)}`,
+          `Tenant license: ${result.licenseName} at ${money(result.tenantCost)}`,
+          `Interacted people: ${fmtNumber.format(result.interactedPeople)} (${fmtNumber.format(result.interactedOverage)} over included)`,
+          `Interacted people add-ons: ${money(result.interactedCost)}`,
+          `Unified profiles: ${fmtNumber.format(result.unifiedProfiles)} (${fmtNumber.format(result.unifiedOverage)} over included)`,
+          `Unified profile add-ons: ${money(result.unifiedCost)}`,
+          "Note: Estimator only; validate against Microsoft quote, regional pricing, taxes, discounts, and telecom costs."
+        ].join("\n");
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(summary);
+          document.getElementById("copySummary").textContent = "Copied";
+          setTimeout(() => {
+            document.getElementById("copySummary").textContent = "Copy summary";
+          }, 1400);
+        }
+      });
+    }
+
+    renderRows();
+    bindEvents();
+    calculate();
+  </script>
+</body>
+</html>
