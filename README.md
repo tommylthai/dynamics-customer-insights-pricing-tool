@@ -4,6 +4,8 @@ Public site: https://tommylthai.github.io/dynamics-customer-insights-pricing-too
 
 This repository publishes a static Dynamics 365 Customer Insights pricing estimator through GitHub Pages.
 
+The original single-tier calculator is preserved in the `version-1` Git tag.
+
 ## Local preview
 
 From the repository root, run:

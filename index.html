@@ -322,6 +322,34 @@
       cursor: not-allowed;
     }
 
+    .checkbox-label {
+      display: flex;
+      grid-column: 1 / -1;
+      align-items: flex-start;
+      gap: 10px;
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      background: var(--cp-surface-soft);
+      padding: 12px;
+    }
+
+    .checkbox-label input {
+      width: auto;
+      margin-top: 3px;
+    }
+
+    .warning-text {
+      grid-column: 1 / -1;
+      margin: 0;
+      color: var(--cp-danger);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .hidden {
+      display: none;
+    }
+
     .small {
       color: var(--cp-text-soft);
       font-size: 0.82rem;
@@ -405,6 +433,30 @@
 
     .result-row:last-child {
       border-bottom: 0;
+    }
+
+    .capacity-breakdown {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .capacity-detail {
+      border: 1px solid var(--cp-border);
+      border-radius: 12px;
+      background: var(--cp-surface-soft);
+      padding: 12px;
+    }
+
+    .capacity-detail strong,
+    .capacity-detail span {
+      display: block;
+    }
+
+    .capacity-detail span {
+      margin-top: 4px;
+      color: var(--cp-text-muted);
+      font-size: 0.82rem;
     }
 
     .amount {
@@ -522,7 +574,7 @@
     <section class="people-guide" aria-label="People capacity definitions">
       <div class="people-guide-item">
         <h2>Interacted people</h2>
-        <p>Unique people who engage with or are reached through Customer Insights - Journeys channels, such as email, SMS, push, forms, or events.</p>
+        <p>Dataverse entities contacted or engaged through Customer Insights - Journeys during the rolling 12-month measurement period. Monthly interactions are limited to 10 times the licensed interacted-people capacity.</p>
       </div>
       <div class="people-guide-item">
         <h2>Unified people</h2>
@@ -557,8 +609,11 @@
               </select>
             </label>
             <label>
-              Billing months
-              <input id="months" type="text" inputmode="numeric" value="12" data-number data-min="1">
+              Pricing mode
+              <select id="pricingMode">
+                <option value="official">Official USD list pricing</option>
+                <option value="custom">Custom quote pricing</option>
+              </select>
             </label>
             <label>
               Tenant price / month
@@ -572,12 +627,27 @@
               Included unified people/profiles
               <input id="includedUnified" type="text" inputmode="numeric" value="100,000" data-number data-min="0" readonly>
             </label>
+            <label class="checkbox-label hidden" id="attachEligibilityRow">
+              <input id="attachEligible" type="checkbox">
+              <span>Customer has at least 10 qualifying licenses for one eligible Dynamics 365 application.</span>
+            </label>
+            <p class="warning-text hidden" id="attachWarning">Attach eligibility is not confirmed. The estimate is using the standard $1,700 tenant price.</p>
           </div>
         </section>
 
         <section class="card">
           <h2>2. Journey interaction inputs</h2>
-          <p class="small">Enter customer-provided usage. For best accuracy, use the known unique monthly interacted people count in the override field. If you leave it blank, the tool estimates people from each channel and may double-count people who interact across multiple channels.</p>
+          <p class="small">For the most accurate result, enter the known rolling 12-month interacted-entity count and the highest expected monthly interaction volume. The channel table can estimate peak monthly interactions when an exact total is not available.</p>
+          <div class="form-grid" style="margin-bottom: 16px;">
+            <label>
+              Rolling 12-month interacted entities
+              <input id="rollingInteracted" type="text" inputmode="numeric" value="0" data-number data-min="0">
+            </label>
+            <label>
+              Known peak monthly interactions
+              <input id="peakInteractionsOverride" type="text" inputmode="numeric" data-number data-min="0" placeholder="Leave blank to total channels">
+            </label>
+          </div>
           <div class="table-wrap">
             <table>
               <thead>
@@ -591,12 +661,7 @@
               <tbody id="channelRows"></tbody>
             </table>
           </div>
-          <div class="form-grid" style="margin-top: 16px;">
-            <label>
-              Known monthly interacted people override
-              <input id="interactedOverride" type="text" inputmode="numeric" data-number data-min="0" placeholder="Leave blank to use estimate">
-            </label>
-          </div>
+          <p class="assumption-note">Required interacted capacity is the highest of the rolling 12-month entity count, the estimated entities from channel activity, or peak monthly interactions divided by 10.</p>
         </section>
 
         <section class="card">
@@ -610,27 +675,54 @@
         </section>
 
         <section class="card">
-          <h2>4. Add-on pack assumptions</h2>
-          <p class="small">Capacity add-ons are calculated in whole packs when usage exceeds the included tenant capacity. Update these only if the customer quote uses different pack pricing.</p>
+          <h2>4. Capacity tier pricing</h2>
+          <p class="small">The calculator automatically selects the lowest-cost eligible tier and rounds up to whole packs. Official pack sizes and tier thresholds are fixed; switch to custom quote pricing to edit the monthly pack prices.</p>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Capacity</th>
+                  <th>Tier</th>
+                  <th>Eligible total capacity</th>
                   <th>Pack size</th>
                   <th>Pack price / month</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="tierRows">
                 <tr>
-                  <td>Interacted people</td>
-                  <td><input id="interactedPackSize" type="text" inputmode="numeric" value="5,000" data-number data-min="1"></td>
-                  <td><input id="interactedPackPrice" type="text" inputmode="decimal" value="$250" data-currency></td>
+                  <td>Interacted T1</td>
+                  <td>10,000-50,000</td>
+                  <td>5,000</td>
+                  <td><input id="interactedT1Price" type="text" inputmode="decimal" value="$250" data-currency data-tier-price readonly></td>
                 </tr>
                 <tr>
-                  <td>Unified people/profiles</td>
-                  <td><input id="unifiedPackSize" type="text" inputmode="numeric" value="100,000" data-number data-min="1"></td>
-                  <td><input id="unifiedPackPrice" type="text" inputmode="decimal" value="$1,000" data-currency></td>
+                  <td>Interacted T2</td>
+                  <td>50,000-250,000</td>
+                  <td>10,000</td>
+                  <td><input id="interactedT2Price" type="text" inputmode="decimal" value="$300" data-currency data-tier-price readonly></td>
+                </tr>
+                <tr>
+                  <td>Interacted T3</td>
+                  <td>More than 250,000</td>
+                  <td>50,000</td>
+                  <td><input id="interactedT3Price" type="text" inputmode="decimal" value="$500" data-currency data-tier-price readonly></td>
+                </tr>
+                <tr>
+                  <td>Unified T1</td>
+                  <td>100,000-500,000</td>
+                  <td>100,000</td>
+                  <td><input id="unifiedT1Price" type="text" inputmode="decimal" value="$2,000" data-currency data-tier-price readonly></td>
+                </tr>
+                <tr>
+                  <td>Unified T2</td>
+                  <td>500,000-2,000,000</td>
+                  <td>100,000</td>
+                  <td><input id="unifiedT2Price" type="text" inputmode="decimal" value="$1,500" data-currency data-tier-price readonly></td>
+                </tr>
+                <tr>
+                  <td>Unified T3</td>
+                  <td>More than 2,000,000</td>
+                  <td>100,000</td>
+                  <td><input id="unifiedT3Price" type="text" inputmode="decimal" value="$1,000" data-currency data-tier-price readonly></td>
                 </tr>
               </tbody>
             </table>
@@ -645,8 +737,9 @@
           <ul class="source-list">
             <li>Microsoft public pricing page for Dynamics 365 Customer Insights: <a href="https://www.microsoft.com/en-us/dynamics-365/products/customer-insights/pricing" target="_blank" rel="noreferrer">microsoft.com Dynamics 365 Customer Insights pricing</a>.</li>
             <li>Tenant license assumptions: Customer Insights <span class="mono">$1,700/month</span> or Customer Insights Attach <span class="mono">$1,000/month</span>, with <span class="mono">10,000</span> interacted people and <span class="mono">100,000</span> unified people included. Attach pricing requires a qualifying Dynamics 365 application.</li>
-            <li>Add-on assumptions: interacted people pack <span class="mono">5,000</span> at <span class="mono">$250/month</span>; unified people pack <span class="mono">100,000</span> at <span class="mono">$1,000/month</span>. Customer usage starts at <span class="mono">0</span>.</li>
-            <li>Raw emails/texts/push sends are converted to estimated interacted people using average interactions per person. If the customer provides a known interacted-people count, use the override field.</li>
+            <li>Official list prices are monthly amounts paid annually. Pricing was last verified against Microsoft sources on September 22, 2026.</li>
+            <li>Interacted people remain counted for 12 months after an interaction. The monthly interaction safe-use limit is 10 times the licensed interacted-people capacity.</li>
+            <li>Tier selection follows Microsoft pack thresholds and minimum quantities. At overlapping thresholds, the estimator selects the lowest-cost eligible tier.</li>
           </ul>
         </section>
       </div>
@@ -655,7 +748,7 @@
         <h2>Cost estimate</h2>
         <div class="metric-grid">
           <div class="metric">
-            <span>Interacted people</span>
+            <span>Required interacted capacity</span>
             <strong id="interactedPeopleOut">0</strong>
           </div>
           <div class="metric">
@@ -681,10 +774,20 @@
             <span class="amount" id="unifiedAddOnOut">$0</span>
           </li>
         </ul>
+        <div class="capacity-breakdown">
+          <div class="capacity-detail">
+            <strong id="interactedTierOut">Interacted: Included capacity</strong>
+            <span id="interactedDetailOut">No add-on packs required.</span>
+          </div>
+          <div class="capacity-detail">
+            <strong id="unifiedTierOut">Unified: Included capacity</strong>
+            <span id="unifiedDetailOut">No add-on packs required.</span>
+          </div>
+        </div>
         <div class="total">
           <span>Estimated monthly total</span>
           <span class="amount" id="monthlyOut">$0</span>
-          <p class="small" id="termOut" style="margin: 8px 0 0;"></p>
+          <p class="small" id="termOut" style="margin: 8px 0 0;">Annual estimate: $0</p>
         </div>
         <div class="actions">
           <button class="primary" id="copySummary">Copy summary</button>
@@ -713,11 +816,23 @@
       maximumFractionDigits: 0
     });
 
+    const officialPricing = {
+      standalone: 1700,
+      attach: 1000,
+      interactedT1Price: 250,
+      interactedT2Price: 300,
+      interactedT3Price: 500,
+      unifiedT1Price: 2000,
+      unifiedT2Price: 1500,
+      unifiedT3Price: 1000
+    };
+
     const ids = [
-      "licenseType", "months", "basePrice", "includedInteracted",
-      "includedUnified", "interactedOverride", "unifiedProfiles",
-      "interactedPackSize", "interactedPackPrice", "unifiedPackSize",
-      "unifiedPackPrice"
+      "licenseType", "pricingMode", "basePrice", "includedInteracted",
+      "includedUnified", "attachEligible", "rollingInteracted",
+      "peakInteractionsOverride", "unifiedProfiles", "interactedT1Price",
+      "interactedT2Price", "interactedT3Price", "unifiedT1Price",
+      "unifiedT2Price", "unifiedT3Price"
     ];
 
     const el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
@@ -748,10 +863,6 @@
         .format(Math.max(minimum, value));
     }
 
-    function safeCeil(value) {
-      return value <= 0 ? 0 : Math.ceil(value);
-    }
-
     function renderRows() {
       document.getElementById("channelRows").innerHTML = channels.map((channel) => `
         <tr>
@@ -764,11 +875,6 @@
 
     }
 
-    function calculatePackCost(overage, packSize, packPrice) {
-      const packs = safeCeil(overage / Math.max(1, packSize));
-      return { cost: packs * packPrice, units: packs };
-    }
-
     function getChannelInputs() {
       return channels.map((channel) => {
         const interactions = numberValue(`${channel.id}Interactions`);
@@ -779,24 +885,115 @@
       });
     }
 
+    function getTierDefinitions() {
+      return {
+        interacted: [
+          { name: "Interacted T1", minCapacity: 10000, maxCapacity: 50000, packSize: 5000, minQty: 1, maxQty: 8, price: numberValue("interactedT1Price") },
+          { name: "Interacted T2", minCapacity: 50000, maxCapacity: 250000, packSize: 10000, minQty: 4, maxQty: 24, price: numberValue("interactedT2Price") },
+          { name: "Interacted T3", minCapacity: 250000, maxCapacity: Infinity, packSize: 50000, minQty: 5, maxQty: Infinity, price: numberValue("interactedT3Price") }
+        ],
+        unified: [
+          { name: "Unified T1", minCapacity: 100000, maxCapacity: 500000, packSize: 100000, minQty: 1, maxQty: 4, price: numberValue("unifiedT1Price") },
+          { name: "Unified T2", minCapacity: 500000, maxCapacity: 2000000, packSize: 100000, minQty: 4, maxQty: 19, price: numberValue("unifiedT2Price") },
+          { name: "Unified T3", minCapacity: 2000000, maxCapacity: Infinity, packSize: 100000, minQty: 19, maxQty: Infinity, price: numberValue("unifiedT3Price") }
+        ]
+      };
+    }
+
+    function calculateTier(requiredCapacity, includedCapacity, tiers) {
+      if (requiredCapacity <= includedCapacity) {
+        return {
+          name: "Included capacity",
+          units: 0,
+          packSize: 0,
+          packPrice: 0,
+          entitledCapacity: includedCapacity,
+          cost: 0
+        };
+      }
+
+      const candidates = tiers.flatMap((tier) => {
+        if (requiredCapacity < tier.minCapacity || requiredCapacity > tier.maxCapacity) {
+          return [];
+        }
+
+        const neededPacks = Math.ceil((requiredCapacity - includedCapacity) / tier.packSize);
+        const units = Math.max(tier.minQty, neededPacks);
+        if (units > tier.maxQty) {
+          return [];
+        }
+
+        const entitledCapacity = includedCapacity + units * tier.packSize;
+        if (entitledCapacity < requiredCapacity) {
+          return [];
+        }
+
+        return [{
+          ...tier,
+          units,
+          entitledCapacity,
+          cost: units * tier.price
+        }];
+      });
+
+      if (!candidates.length) {
+        throw new Error(`No valid capacity tier found for ${requiredCapacity}.`);
+      }
+
+      return candidates.sort((a, b) =>
+        a.cost - b.cost || a.entitledCapacity - b.entitledCapacity
+      )[0];
+    }
+
+    function setOfficialPrices() {
+      Object.entries(officialPricing).forEach(([id, value]) => {
+        if (document.getElementById(id)) {
+          formatCurrencyInput(document.getElementById(id), value);
+        }
+      });
+      const selectedLicense = el.licenseType.value;
+      formatCurrencyInput(el.basePrice, officialPricing[selectedLicense]);
+    }
+
+    function updatePricingMode() {
+      const isCustom = el.pricingMode.value === "custom";
+      el.basePrice.readOnly = !isCustom;
+      document.querySelectorAll("[data-tier-price]").forEach((input) => {
+        input.readOnly = !isCustom;
+      });
+
+      if (!isCustom) {
+        setOfficialPrices();
+      }
+    }
+
+    function updateAttachState() {
+      const isAttach = el.licenseType.value === "attach";
+      document.getElementById("attachEligibilityRow").classList.toggle("hidden", !isAttach);
+      document.getElementById("attachWarning").classList.toggle("hidden", !isAttach || el.attachEligible.checked);
+    }
+
     function calculate() {
       const channelInputs = getChannelInputs();
       const estimatedPeople = channelInputs.reduce((sum, channel) => sum + channel.people, 0);
-      const override = el.interactedOverride.value === "" ? null : numberValue("interactedOverride");
-      const interactedPeople = override === null ? estimatedPeople : override;
+      const channelInteractions = channelInputs.reduce((sum, channel) => sum + channel.interactions, 0);
+      const peakInteractions = el.peakInteractionsOverride.value.trim() === ""
+        ? channelInteractions
+        : numberValue("peakInteractionsOverride");
+      const rollingInteracted = numberValue("rollingInteracted");
+      const interactionCapacity = Math.ceil(peakInteractions / 10);
+      const interactedPeople = Math.max(rollingInteracted, estimatedPeople, interactionCapacity);
       const unifiedProfiles = numberValue("unifiedProfiles");
       const includedInteracted = numberValue("includedInteracted");
       const includedUnified = numberValue("includedUnified");
-      const interactedOverage = Math.max(0, interactedPeople - includedInteracted);
-      const unifiedOverage = Math.max(0, unifiedProfiles - includedUnified);
       const selectedLicense = el.licenseType.options[el.licenseType.selectedIndex];
-      const tenantCost = Number(selectedLicense.dataset.price || 0);
-      const interactedCalc = calculatePackCost(interactedOverage, numberValue("interactedPackSize", 1), numberValue("interactedPackPrice"));
-      const unifiedCalc = calculatePackCost(unifiedOverage, numberValue("unifiedPackSize", 1), numberValue("unifiedPackPrice"));
+      const attachConfirmed = el.licenseType.value !== "attach" || el.attachEligible.checked;
+      const tenantCost = attachConfirmed ? numberValue("basePrice") : officialPricing.standalone;
+      const tiers = getTierDefinitions();
+      const interactedCalc = calculateTier(interactedPeople, includedInteracted, tiers.interacted);
+      const unifiedCalc = calculateTier(unifiedProfiles, includedUnified, tiers.unified);
       const monthlyTotal = tenantCost + interactedCalc.cost + unifiedCalc.cost;
-      const months = Math.max(1, numberValue("months", 12));
 
-      formatCurrencyInput(el.basePrice, tenantCost);
       document.getElementById("tenantPriceTotal").textContent = money(tenantCost);
       document.getElementById("includedInteractedTotal").textContent = fmtNumber.format(includedInteracted);
       document.getElementById("includedUnifiedTotal").textContent = fmtNumber.format(includedUnified);
@@ -807,20 +1004,33 @@
       document.getElementById("interactedAddOnOut").textContent = money(interactedCalc.cost);
       document.getElementById("unifiedAddOnOut").textContent = money(unifiedCalc.cost);
       document.getElementById("monthlyOut").textContent = money(monthlyTotal);
-      document.getElementById("termOut").textContent = `${months}-month estimate: ${money(monthlyTotal * months)}`;
-      document.getElementById("methodOut").textContent = `Using ${selectedLicense.textContent.trim()}; ${override === null ? "estimated interacted people from channel interactions" : "used interacted people override"}. Interacted overage: ${fmtNumber.format(interactedOverage)}. Unified overage: ${fmtNumber.format(unifiedOverage)}.`;
+      document.getElementById("termOut").textContent = `Annual estimate: ${money(monthlyTotal * 12)} (monthly prices paid yearly)`;
+      document.getElementById("interactedTierOut").textContent = `Interacted: ${interactedCalc.name}`;
+      document.getElementById("interactedDetailOut").textContent = interactedCalc.units
+        ? `${interactedCalc.units} x ${fmtNumber.format(interactedCalc.packSize)} packs at ${money(interactedCalc.price)}; entitlement ${fmtNumber.format(interactedCalc.entitledCapacity)}.`
+        : "No add-on packs required.";
+      document.getElementById("unifiedTierOut").textContent = `Unified: ${unifiedCalc.name}`;
+      document.getElementById("unifiedDetailOut").textContent = unifiedCalc.units
+        ? `${unifiedCalc.units} x ${fmtNumber.format(unifiedCalc.packSize)} packs at ${money(unifiedCalc.price)}; entitlement ${fmtNumber.format(unifiedCalc.entitledCapacity)}.`
+        : "No add-on packs required.";
+      document.getElementById("methodOut").textContent =
+        `Required interacted capacity uses the maximum of rolling entities (${fmtNumber.format(rollingInteracted)}), estimated channel entities (${fmtNumber.format(estimatedPeople)}), and peak interactions divided by 10 (${fmtNumber.format(interactionCapacity)}). ${attachConfirmed ? "" : "Attach eligibility is unconfirmed, so standard tenant pricing is used."}`;
 
       return {
         interactedPeople,
+        rollingInteracted,
+        estimatedPeople,
+        peakInteractions,
+        interactionCapacity,
         unifiedProfiles,
-        interactedOverage,
-        unifiedOverage,
         tenantCost,
-        licenseName: selectedLicense.textContent.trim(),
+        licenseName: attachConfirmed ? selectedLicense.textContent.trim() : "Customer Insights (standard fallback)",
         interactedCost: interactedCalc.cost,
         unifiedCost: unifiedCalc.cost,
+        interactedCalc,
+        unifiedCalc,
         monthlyTotal,
-        months
+        pricingMode: el.pricingMode.options[el.pricingMode.selectedIndex].textContent.trim()
       };
     }
 
@@ -828,6 +1038,23 @@
       document.querySelectorAll("input, select").forEach((input) => {
         input.addEventListener("input", calculate);
         input.addEventListener("change", calculate);
+      });
+
+      el.licenseType.addEventListener("change", () => {
+        el.attachEligible.checked = false;
+        formatCurrencyInput(el.basePrice, officialPricing[el.licenseType.value]);
+        updateAttachState();
+        calculate();
+      });
+
+      el.attachEligible.addEventListener("change", () => {
+        updateAttachState();
+        calculate();
+      });
+
+      el.pricingMode.addEventListener("change", () => {
+        updatePricingMode();
+        calculate();
       });
 
       document.querySelectorAll("[data-currency]").forEach((input) => {
@@ -850,18 +1077,16 @@
           document.getElementById(`${channel.id}Avg`).value = channel.avg;
         });
         el.licenseType.value = "standalone";
-        el.months.value = 12;
-        el.basePrice.value = 1700;
+        el.pricingMode.value = "official";
+        el.attachEligible.checked = false;
         el.includedInteracted.value = 10000;
         el.includedUnified.value = 100000;
-        el.interactedOverride.value = "";
+        el.rollingInteracted.value = 0;
+        el.peakInteractionsOverride.value = "";
         el.unifiedProfiles.value = 0;
-        el.interactedPackSize.value = 5000;
-        el.interactedPackPrice.value = 250;
-        el.unifiedPackSize.value = 100000;
-        el.unifiedPackPrice.value = 1000;
-        formatCurrencyInput(el.interactedPackPrice);
-        formatCurrencyInput(el.unifiedPackPrice);
+        setOfficialPrices();
+        updatePricingMode();
+        updateAttachState();
         document.querySelectorAll("[data-number]").forEach((input) => formatNumberInput(input));
         calculate();
       });
@@ -871,12 +1096,14 @@
         const summary = [
           "Dynamics 365 Customer Insights pricing estimate",
           `Monthly total: ${money(result.monthlyTotal)}`,
-          `${result.months}-month total: ${money(result.monthlyTotal * result.months)}`,
+          `Annual total: ${money(result.monthlyTotal * 12)} (paid yearly)`,
           `Tenant license: ${result.licenseName} at ${money(result.tenantCost)}`,
-          `Interacted people: ${fmtNumber.format(result.interactedPeople)} (${fmtNumber.format(result.interactedOverage)} over included)`,
-          `Interacted people add-ons: ${money(result.interactedCost)}`,
-          `Unified profiles: ${fmtNumber.format(result.unifiedProfiles)} (${fmtNumber.format(result.unifiedOverage)} over included)`,
-          `Unified profile add-ons: ${money(result.unifiedCost)}`,
+          `Required interacted capacity: ${fmtNumber.format(result.interactedPeople)}`,
+          `Interacted usage basis: ${fmtNumber.format(result.rollingInteracted)} rolling entities; ${fmtNumber.format(result.peakInteractions)} peak monthly interactions`,
+          `Interacted add-ons: ${result.interactedCalc.name}, ${result.interactedCalc.units} packs, ${money(result.interactedCost)}`,
+          `Unified profiles: ${fmtNumber.format(result.unifiedProfiles)}`,
+          `Unified add-ons: ${result.unifiedCalc.name}, ${result.unifiedCalc.units} packs, ${money(result.unifiedCost)}`,
+          `Pricing mode: ${result.pricingMode}`,
           "Note: Estimator only; validate against Microsoft quote, regional pricing, taxes, discounts, and telecom costs."
         ].join("\n");
 
@@ -891,6 +1118,9 @@
     }
 
     renderRows();
+    setOfficialPrices();
+    updatePricingMode();
+    updateAttachState();
     bindEvents();
     calculate();
   </script>
