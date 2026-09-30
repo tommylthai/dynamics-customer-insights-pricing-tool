@@ -157,6 +157,160 @@
       white-space: nowrap;
     }
 
+    .how-to {
+      margin-bottom: 24px;
+      border: 1px solid var(--cp-border-strong);
+      border-radius: 20px;
+      background:
+        linear-gradient(135deg, var(--cp-highlight), transparent 45%),
+        var(--cp-surface);
+      box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14);
+      overflow: hidden;
+    }
+
+    .how-to summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 22px 24px;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .how-to summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .how-to-heading {
+      display: grid;
+      gap: 4px;
+    }
+
+    .how-to-heading strong {
+      font-size: 1.25rem;
+    }
+
+    .how-to-heading span {
+      color: var(--cp-text-muted);
+      font-size: 0.92rem;
+      font-weight: 400;
+    }
+
+    .how-to-toggle {
+      flex: 0 0 auto;
+      border: 1px solid var(--cp-border);
+      border-radius: 999px;
+      background: var(--cp-bg-elevated);
+      padding: 7px 12px;
+      color: var(--cp-text-muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .how-to[open] .how-to-toggle::after {
+      content: "Hide";
+    }
+
+    .how-to:not([open]) .how-to-toggle::after {
+      content: "Show";
+    }
+
+    .how-to-content {
+      border-top: 1px solid var(--cp-border);
+      padding: 24px;
+    }
+
+    .walkthrough-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .walkthrough-step {
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      background: var(--cp-panel);
+      padding: 16px;
+    }
+
+    .step-number {
+      display: inline-grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      margin-bottom: 12px;
+      border-radius: 50%;
+      background: var(--cp-accent);
+      color: var(--cp-accent-fg);
+      font-weight: 800;
+    }
+
+    .walkthrough-step h3 {
+      margin-bottom: 6px;
+      font-size: 1rem;
+    }
+
+    .walkthrough-step p {
+      margin-bottom: 0;
+      color: var(--cp-text-muted);
+      font-size: 0.86rem;
+    }
+
+    .how-to-support {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .how-to-panel {
+      border-radius: 16px;
+      background: var(--cp-surface-soft);
+      padding: 16px;
+    }
+
+    .how-to-panel h3 {
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+
+    .how-to-panel ul {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--cp-text-muted);
+    }
+
+    .how-to-panel li + li {
+      margin-top: 6px;
+    }
+
+    .example-flow {
+      display: grid;
+      gap: 6px;
+      margin: 0;
+      color: var(--cp-text-muted);
+    }
+
+    .example-flow strong {
+      color: var(--cp-text);
+    }
+
+    .start-link {
+      display: inline-block;
+      margin-top: 16px;
+      border-radius: 0.625rem;
+      background: var(--cp-accent);
+      color: var(--cp-accent-fg);
+      padding: 10px 14px;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .start-link:hover {
+      background: var(--cp-accent-hover);
+    }
+
     .people-guide {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -541,6 +695,10 @@
         grid-template-columns: 1fr;
       }
 
+      .walkthrough-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       .summary-card {
         position: static;
       }
@@ -550,8 +708,19 @@
       .form-grid,
       .metric-grid,
       .entitlement-grid,
-      .people-guide {
+      .people-guide,
+      .walkthrough-grid,
+      .how-to-support {
         grid-template-columns: 1fr;
+      }
+
+      .how-to summary {
+        align-items: flex-start;
+        padding: 18px;
+      }
+
+      .how-to-content {
+        padding: 18px;
       }
     }
   </style>
@@ -571,6 +740,62 @@
       <div class="badge">USD list-price model</div>
     </section>
 
+    <details class="how-to" open>
+      <summary>
+        <span class="how-to-heading">
+          <strong>How to use this tool</strong>
+          <span>Follow these four steps. The estimate updates automatically as you enter information.</span>
+        </span>
+        <span class="how-to-toggle" aria-hidden="true"></span>
+      </summary>
+      <div class="how-to-content">
+        <div class="walkthrough-grid">
+          <article class="walkthrough-step">
+            <span class="step-number">1</span>
+            <h3>Choose the license</h3>
+            <p>Use <strong>Customer Insights</strong> unless the customer owns at least 10 qualifying licenses for one eligible Dynamics 365 application. Only then select and confirm <strong>Customer Insights Attach</strong>.</p>
+          </article>
+          <article class="walkthrough-step">
+            <span class="step-number">2</span>
+            <h3>Enter Journeys usage</h3>
+            <p>Enter the number of entities contacted during the last 12 months. Then enter the highest monthly interaction volume, or complete the channel table if that total is unknown.</p>
+          </article>
+          <article class="walkthrough-step">
+            <span class="step-number">3</span>
+            <h3>Enter Data usage</h3>
+            <p>Enter the total number of unified customer profiles across all Customer Insights - Data environments in the tenant. Do not enter the number of raw source records.</p>
+          </article>
+          <article class="walkthrough-step">
+            <span class="step-number">4</span>
+            <h3>Review the estimate</h3>
+            <p>Use the result panel to see the selected capacity tiers, pack quantities, monthly estimate, and annual estimate. Validate the final amount with Microsoft or your licensing partner.</p>
+          </article>
+        </div>
+
+        <div class="how-to-support">
+          <div class="how-to-panel">
+            <h3>What information should I gather?</h3>
+            <ul>
+              <li>Whether the customer qualifies for Attach pricing.</li>
+              <li>Rolling 12-month interacted entities from Journeys quota usage.</li>
+              <li>Highest expected monthly email, SMS, push, voice, and custom-channel sends.</li>
+              <li>Total unified profiles across the tenant.</li>
+            </ul>
+          </div>
+          <div class="how-to-panel">
+            <h3>Simple example</h3>
+            <p class="example-flow">
+              <span><strong>Customer input:</strong> 75,000 interacted entities, 600,000 peak monthly interactions, and 300,000 unified profiles.</span>
+              <span><strong>Tool behavior:</strong> It compares 75,000 entities with 60,000 people required for interaction volume, uses 75,000, and automatically selects valid interacted and unified capacity tiers.</span>
+              <span><strong>Result:</strong> Review the monthly and annual list-price estimate in the right-hand panel.</span>
+            </p>
+          </div>
+        </div>
+
+        <a class="start-link" href="#license-section">Start with the tenant license</a>
+      </div>
+    </details>
+
     <section class="people-guide" aria-label="People capacity definitions">
       <div class="people-guide-item">
         <h2>Interacted people</h2>
@@ -584,7 +809,7 @@
 
     <section class="grid">
       <div class="stack">
-        <section class="card">
+        <section class="card" id="license-section">
           <h2>1. Tenant license</h2>
           <div class="entitlement-grid">
             <div class="entitlement">
