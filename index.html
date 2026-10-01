@@ -849,6 +849,61 @@
       color: var(--cp-link);
     }
 
+    .storage-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .storage-metric {
+      border: 1px solid var(--cp-border);
+      border-radius: 12px;
+      background: linear-gradient(145deg, var(--cp-bg-elevated), var(--cp-surface-soft));
+      padding: 16px;
+    }
+
+    .storage-metric span,
+    .storage-metric strong {
+      display: block;
+    }
+
+    .storage-metric span {
+      color: var(--cp-text-muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .storage-metric strong {
+      margin-top: 6px;
+      color: var(--cp-accent);
+      font-size: 1.6rem;
+    }
+
+    .storage-breakdown {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .storage-breakdown li {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--cp-border);
+      padding: 8px 0;
+      color: var(--cp-text-muted);
+    }
+
+    .storage-breakdown li:last-child {
+      border-bottom: 0;
+    }
+
     .mono {
       font-family: Consolas, "Courier New", Courier, monospace;
     }
@@ -878,7 +933,8 @@
       .entitlement-grid,
       .people-guide,
       .walkthrough-grid,
-      .how-to-support {
+      .how-to-support,
+      .storage-grid {
         grid-template-columns: 1fr;
       }
 
@@ -1009,7 +1065,7 @@
           <label>
             Total number of interactions in your busiest month
             <input id="peakInteractionsOverride" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="peakInteractionsError">
-            <span class="field-help">Include outbound email, SMS, push, voice, and custom-channel sends.</span>
+            <span class="field-help">Include outbound email, SMS, push, voice, and custom-channel sends. Microsoft allows 10 monthly interactions per licensed interacted person, so 750,000 interactions require at least 75,000 interacted-person capacity.</span>
             <span class="field-error" id="peakInteractionsError"></span>
           </label>
           <details class="usage-accuracy">
@@ -1180,11 +1236,38 @@
           </div>
           <ul class="source-list">
             <li>Microsoft public pricing page for Dynamics 365 Customer Insights: <a href="https://www.microsoft.com/en-us/dynamics-365/products/customer-insights/pricing" target="_blank" rel="noreferrer">microsoft.com Dynamics 365 Customer Insights pricing</a>.</li>
+            <li>Capacity and Dataverse storage entitlements: <a href="https://go.microsoft.com/fwlink/?LinkId=866544" target="_blank" rel="noreferrer">Microsoft Dynamics 365 Licensing Guide</a>.</li>
             <li>Tenant license assumptions: Customer Insights <span class="mono">$1,700/month</span> or Customer Insights Attach <span class="mono">$1,000/month</span>, with <span class="mono">10,000</span> interacted people and <span class="mono">100,000</span> unified people included. Attach pricing requires a qualifying Dynamics 365 application.</li>
             <li>Official list prices are monthly amounts paid annually. Pricing was last verified against Microsoft sources on September 22, 2026.</li>
             <li>Interacted people remain counted for 12 months after an interaction. The monthly interaction safe-use limit is 10 times the licensed interacted-people capacity.</li>
             <li>Tier selection follows Microsoft pack thresholds and minimum quantities. At overlapping thresholds, the estimator selects the lowest-cost eligible tier.</li>
+            <li>Dataverse storage assumptions: the base license includes <span class="mono">45 GB database</span>, <span class="mono">60 GB file</span>, and <span class="mono">4 GB log</span>. Additional capacity accrues at the published equivalent rate per 50,000 interacted people and 100,000 unified people.</li>
           </ul>
+        </section>
+
+        <section class="card" id="storage-section">
+          <h2>Dataverse storage entitlement</h2>
+          <p class="small">Estimated total storage included with the Customer Insights tenant license and the calculated people-capacity add-ons.</p>
+          <div class="storage-grid">
+            <div class="storage-metric">
+              <span>Database</span>
+              <strong id="databaseStorageOut">45 GB</strong>
+            </div>
+            <div class="storage-metric">
+              <span>File</span>
+              <strong id="fileStorageOut">60 GB</strong>
+            </div>
+            <div class="storage-metric">
+              <span>Log</span>
+              <strong id="logStorageOut">4 GB</strong>
+            </div>
+          </div>
+          <ul class="storage-breakdown">
+            <li><span>Base Customer Insights entitlement</span><strong>45 GB database · 60 GB file · 4 GB log</strong></li>
+            <li><span>From interacted-people add-ons</span><strong id="interactedStorageOut">0 GB database · 0 GB file</strong></li>
+            <li><span>From unified-people add-ons</span><strong id="unifiedStorageOut">0 GB database · 0 GB file</strong></li>
+          </ul>
+          <p class="assumption-note">Storage accrual is estimated proportionally from Microsoft’s published entitlement rates: 1 GB database and 2 GB file per additional 50,000 interacted people; 15 GB database and 20 GB file per additional 100,000 unified people. Confirm actual tenant capacity in Power Platform admin center.</p>
         </section>
       </div>
 
@@ -1192,7 +1275,7 @@
         <h2>Cost estimate</h2>
         <div class="metric-grid">
           <div class="metric">
-            <span>Required interacted capacity</span>
+            <span>Required interacted-person capacity</span>
             <strong id="interactedPeopleOut">0</strong>
           </div>
           <div class="metric">
@@ -1266,6 +1349,16 @@
     const fmtNumber = new Intl.NumberFormat("en-US", {
       maximumFractionDigits: 0
     });
+
+    const fmtStorage = new Intl.NumberFormat("en-US", {
+      maximumFractionDigits: 1
+    });
+
+    const baseStorage = {
+      database: 45,
+      file: 60,
+      log: 4
+    };
 
     const officialPricing = {
       standalone: 1700,
@@ -1483,6 +1576,31 @@
       });
       document.getElementById("termOut").textContent = "Correct the highlighted fields to calculate an estimate.";
       document.getElementById("methodOut").textContent = "The estimate is paused until all visible fields contain valid numbers.";
+      ["databaseStorageOut", "fileStorageOut", "logStorageOut"].forEach((id) => {
+        document.getElementById(id).textContent = "--";
+      });
+      ["interactedStorageOut", "unifiedStorageOut"].forEach((id) => {
+        document.getElementById(id).textContent = "--";
+      });
+    }
+
+    function calculateStorage(interactedCalc, unifiedCalc) {
+      const interactedAddOnCapacity = interactedCalc.units * interactedCalc.packSize;
+      const unifiedAddOnCapacity = unifiedCalc.units * unifiedCalc.packSize;
+      const interactedDatabase = interactedAddOnCapacity / 50000;
+      const interactedFile = interactedAddOnCapacity / 50000 * 2;
+      const unifiedDatabase = unifiedAddOnCapacity / 100000 * 15;
+      const unifiedFile = unifiedAddOnCapacity / 100000 * 20;
+
+      return {
+        interactedDatabase,
+        interactedFile,
+        unifiedDatabase,
+        unifiedFile,
+        database: baseStorage.database + interactedDatabase + unifiedDatabase,
+        file: baseStorage.file + interactedFile + unifiedFile,
+        log: baseStorage.log
+      };
     }
 
     function calculate() {
@@ -1512,6 +1630,7 @@
       const tiers = getTierDefinitions();
       const interactedCalc = calculateTier(interactedPeople, includedInteracted, tiers.interacted);
       const unifiedCalc = calculateTier(unifiedProfiles, includedUnified, tiers.unified);
+      const storage = calculateStorage(interactedCalc, unifiedCalc);
       const monthlyTotal = tenantCost + interactedCalc.cost + unifiedCalc.cost;
 
       document.getElementById("tenantPriceTotal").textContent = money(tenantCost);
@@ -1528,14 +1647,21 @@
       document.getElementById("termOut").textContent = `Annual estimate: ${money(monthlyTotal * 12)} (monthly prices paid yearly)`;
       document.getElementById("interactedTierOut").textContent = `Interacted: ${interactedCalc.name}`;
       document.getElementById("interactedDetailOut").textContent = interactedCalc.units
-        ? `${fmtNumber.format(includedInteracted)} included + ${interactedCalc.units} x ${fmtNumber.format(interactedCalc.packSize)} add-on packs at ${money(interactedCalc.price)} = ${fmtNumber.format(interactedCalc.entitledCapacity)} total entitlement.`
-        : `${fmtNumber.format(includedInteracted)} included in the tenant license; no add-on packs required.`;
+        ? `${fmtNumber.format(includedInteracted)} included + ${interactedCalc.units} x ${fmtNumber.format(interactedCalc.packSize)} add-on packs at ${money(interactedCalc.price)} = ${fmtNumber.format(interactedCalc.entitledCapacity)} interacted-person entitlement, supporting up to ${fmtNumber.format(interactedCalc.entitledCapacity * 10)} interactions per month.`
+        : `${fmtNumber.format(includedInteracted)} included in the tenant license, supporting up to ${fmtNumber.format(includedInteracted * 10)} interactions per month; no add-on packs required.`;
       document.getElementById("unifiedTierOut").textContent = `Unified: ${unifiedCalc.name}`;
       document.getElementById("unifiedDetailOut").textContent = unifiedCalc.units
         ? `${fmtNumber.format(includedUnified)} included + ${unifiedCalc.units} x ${fmtNumber.format(unifiedCalc.packSize)} add-on packs at ${money(unifiedCalc.price)} = ${fmtNumber.format(unifiedCalc.entitledCapacity)} total entitlement.`
         : `${fmtNumber.format(includedUnified)} included in the tenant license; no add-on packs required.`;
       document.getElementById("methodOut").textContent =
         `Required interacted capacity uses the highest of current interacted-people usage (${fmtNumber.format(rollingInteracted)}), estimated people from channel activity (${fmtNumber.format(estimatedPeople)}), and busiest-month interactions divided by 10 (${fmtNumber.format(interactionCapacity)}). ${attachConfirmed ? "" : "Attach eligibility is unconfirmed, so standard tenant pricing is used."}`;
+      document.getElementById("databaseStorageOut").textContent = `${fmtStorage.format(storage.database)} GB`;
+      document.getElementById("fileStorageOut").textContent = `${fmtStorage.format(storage.file)} GB`;
+      document.getElementById("logStorageOut").textContent = `${fmtStorage.format(storage.log)} GB`;
+      document.getElementById("interactedStorageOut").textContent =
+        `${fmtStorage.format(storage.interactedDatabase)} GB database · ${fmtStorage.format(storage.interactedFile)} GB file`;
+      document.getElementById("unifiedStorageOut").textContent =
+        `${fmtStorage.format(storage.unifiedDatabase)} GB database · ${fmtStorage.format(storage.unifiedFile)} GB file`;
 
       return {
         interactedPeople,
@@ -1550,6 +1676,7 @@
         unifiedCost: unifiedCalc.cost,
         interactedCalc,
         unifiedCalc,
+        storage,
         monthlyTotal,
         pricingMode: el.pricingMode.options[el.pricingMode.selectedIndex].textContent.trim()
       };
@@ -1641,6 +1768,7 @@
           `Interacted add-ons: ${result.interactedCalc.name}, ${result.interactedCalc.units} packs, ${money(result.interactedCost)}`,
           `Unified profiles: ${fmtNumber.format(result.unifiedProfiles)}`,
           `Unified add-ons: ${result.unifiedCalc.name}, ${result.unifiedCalc.units} packs, ${money(result.unifiedCost)}`,
+          `Dataverse storage entitlement: ${fmtStorage.format(result.storage.database)} GB database; ${fmtStorage.format(result.storage.file)} GB file; ${fmtStorage.format(result.storage.log)} GB log`,
           `Pricing mode: ${result.pricingMode}`,
           "Note: Estimator only; validate against Microsoft quote, regional pricing, taxes, discounts, and telecom costs."
         ].join("\n");
