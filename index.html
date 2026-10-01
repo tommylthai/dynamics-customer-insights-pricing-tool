@@ -91,11 +91,12 @@
     }
 
     .disclaimer-banner {
-      background: var(--cp-danger);
-      color: var(--cp-accent-fg);
+      border-bottom: 1px solid var(--cp-border);
+      background: var(--cp-accent-soft);
+      color: var(--cp-text);
       padding: 12px 20px;
       text-align: center;
-      font-weight: 800;
+      font-weight: 700;
       letter-spacing: 0.01em;
     }
 
@@ -469,6 +470,29 @@
       box-shadow: 0 0 0 3px var(--cp-accent-soft);
     }
 
+    input[aria-invalid="true"],
+    select[aria-invalid="true"] {
+      border-color: var(--cp-danger);
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+    }
+
+    .field-help {
+      color: var(--cp-text-soft);
+      font-size: 0.78rem;
+      font-weight: 400;
+    }
+
+    .field-help a {
+      color: var(--cp-link);
+    }
+
+    .field-error {
+      min-height: 1em;
+      color: var(--cp-danger);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
     input[readonly] {
       border-color: var(--cp-border);
       background: var(--cp-surface-soft);
@@ -502,6 +526,29 @@
 
     .hidden {
       display: none;
+    }
+
+    .advanced-settings {
+      margin-top: 16px;
+      border: 1px solid var(--cp-border);
+      border-radius: 12px;
+      background: var(--cp-surface-soft);
+    }
+
+    .advanced-settings summary {
+      padding: 12px 14px;
+      cursor: pointer;
+      color: var(--cp-text);
+      font-weight: 700;
+    }
+
+    .advanced-content {
+      border-top: 1px solid var(--cp-border);
+      padding: 16px;
+    }
+
+    .usage-mode {
+      margin-bottom: 16px;
     }
 
     .small {
@@ -689,6 +736,10 @@
       font-family: Consolas, "Courier New", Courier, monospace;
     }
 
+    .mobile-total {
+      display: none;
+    }
+
     @media (max-width: 980px) {
       .hero,
       .grid {
@@ -722,11 +773,41 @@
       .how-to-content {
         padding: 18px;
       }
+
+      .mobile-total {
+        position: sticky;
+        bottom: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        border-top: 1px solid var(--cp-border-strong);
+        background: var(--cp-panel-strong);
+        box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.14);
+        padding: 12px 16px;
+      }
+
+      .mobile-total span {
+        color: var(--cp-text-muted);
+        font-size: 0.8rem;
+      }
+
+      .mobile-total strong {
+        display: block;
+        color: var(--cp-accent);
+        font-size: 1.35rem;
+      }
+
+      .mobile-total a {
+        color: var(--cp-link);
+        font-weight: 700;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="disclaimer-banner">Not an official Microsoft tool. Strictly used for estimation purposes only.</div>
+  <div class="disclaimer-banner">Planning estimator using published Microsoft list pricing. Validate final pricing with Microsoft or your licensing partner.</div>
   <main class="app">
     <section class="hero">
       <div>
@@ -740,11 +821,11 @@
       <div class="badge">USD list-price model</div>
     </section>
 
-    <details class="how-to" open>
+    <details class="how-to">
       <summary>
         <span class="how-to-heading">
-          <strong>How to use this tool</strong>
-          <span>Follow these four steps. The estimate updates automatically as you enter information.</span>
+          <strong>Quick start: how to use this tool</strong>
+          <span>Choose a license, enter usage, and review the automatically updated estimate.</span>
         </span>
         <span class="how-to-toggle" aria-hidden="true"></span>
       </summary>
@@ -832,59 +913,87 @@
                 <option value="standalone" data-price="1700">Customer Insights</option>
                 <option value="attach" data-price="1000">Customer Insights Attach</option>
               </select>
-            </label>
-            <label>
-              Pricing mode
-              <select id="pricingMode">
-                <option value="official">Official USD list pricing</option>
-                <option value="custom">Custom quote pricing</option>
-              </select>
-            </label>
-            <label>
-              Tenant price / month
-              <input id="basePrice" type="text" inputmode="decimal" value="$1,700" data-currency readonly>
-            </label>
-            <label>
-              Included interacted people
-              <input id="includedInteracted" type="text" inputmode="numeric" value="10,000" data-number data-min="0" readonly>
-            </label>
-            <label>
-              Included unified people/profiles
-              <input id="includedUnified" type="text" inputmode="numeric" value="100,000" data-number data-min="0" readonly>
+              <span class="field-help">Choose Attach only when the customer owns at least 10 qualifying licenses for one eligible Dynamics 365 application.</span>
             </label>
             <label class="checkbox-label hidden" id="attachEligibilityRow">
               <input id="attachEligible" type="checkbox">
-              <span>Customer has at least 10 qualifying licenses for one eligible Dynamics 365 application.</span>
+              <span>Customer has at least 10 licenses for one qualifying application: Sales, Customer Service, Field Service, Finance, Supply Chain Management, or Commerce.</span>
             </label>
             <p class="warning-text hidden" id="attachWarning">Attach eligibility is not confirmed. The estimate is using the standard $1,700 tenant price.</p>
           </div>
+          <details class="advanced-settings">
+            <summary>Advanced pricing and included capacity</summary>
+            <div class="advanced-content form-grid">
+              <label>
+                Pricing mode
+                <select id="pricingMode">
+                  <option value="official">Official USD list pricing</option>
+                  <option value="custom">Custom quote pricing</option>
+                </select>
+              </label>
+              <label>
+                Tenant price / month
+                <input id="basePrice" type="text" inputmode="decimal" value="$1,700" data-currency data-error="basePriceError" readonly>
+                <span class="field-error" id="basePriceError"></span>
+              </label>
+              <label>
+                Included interacted people
+                <input id="includedInteracted" type="text" inputmode="numeric" value="10,000" data-number data-min="0" readonly>
+              </label>
+              <label>
+                Included unified people/profiles
+                <input id="includedUnified" type="text" inputmode="numeric" value="100,000" data-number data-min="0" readonly>
+              </label>
+            </div>
+          </details>
         </section>
 
         <section class="card">
           <h2>2. Journey interaction inputs</h2>
-          <p class="small">For the most accurate result, enter the known rolling 12-month interacted-entity count and the highest expected monthly interaction volume. The channel table can estimate peak monthly interactions when an exact total is not available.</p>
-          <div class="form-grid" style="margin-bottom: 16px;">
+          <p class="small">Choose the path that best matches the information you have. You can change this choice at any time.</p>
+          <label class="usage-mode">
+            How would you like to enter Journeys usage?
+            <select id="usageMethod">
+              <option value="known">I know my usage totals</option>
+              <option value="guided">Help me estimate by channel</option>
+            </select>
+          </label>
+          <div class="form-grid" id="knownUsagePanel" style="margin-bottom: 16px;">
             <label>
-              Rolling 12-month interacted entities
-              <input id="rollingInteracted" type="text" inputmode="numeric" value="0" data-number data-min="0">
+              People, leads, accounts, or profiles contacted in the last 12 months
+              <input id="rollingInteracted" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="rollingInteractedError">
+              <span class="field-help">In Customer Insights - Journeys, go to <strong>Settings → Quota limits</strong> and use the interacted-people usage.</span>
+              <span class="field-error" id="rollingInteractedError"></span>
             </label>
             <label>
-              Known peak monthly interactions
-              <input id="peakInteractionsOverride" type="text" inputmode="numeric" data-number data-min="0" placeholder="Leave blank to total channels">
+              Highest expected interactions in one month
+              <input id="peakInteractionsOverride" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="peakInteractionsError">
+              <span class="field-help">Include outbound email, SMS, push, voice, and custom-channel sends during the busiest month.</span>
+              <span class="field-error" id="peakInteractionsError"></span>
             </label>
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Channel</th>
-                  <th>Monthly interactions</th>
-                  <th>Avg interactions / person</th>
-                  <th>Estimated people</th>
-                </tr>
-              </thead>
-              <tbody id="channelRows"></tbody>
-            </table>
+          <div id="guidedUsagePanel" class="hidden">
+            <div class="form-grid" style="margin-bottom: 16px;">
+              <label>
+                Estimated distinct entities contacted over 12 months
+                <input id="estimatedAnnualInteracted" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="estimatedAnnualError">
+                <span class="field-help">Count contacts, leads, accounts, and profiles once each when possible. Use your best conservative estimate.</span>
+                <span class="field-error" id="estimatedAnnualError"></span>
+              </label>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Channel</th>
+                    <th>Peak monthly interactions</th>
+                    <th>Avg interactions / person</th>
+                    <th>Estimated people</th>
+                  </tr>
+                </thead>
+                <tbody id="channelRows"></tbody>
+              </table>
+            </div>
           </div>
           <p class="assumption-note">Required interacted capacity is the highest of the rolling 12-month entity count, the estimated entities from channel activity, or peak monthly interactions divided by 10.</p>
         </section>
@@ -894,15 +1003,18 @@
           <div class="form-grid">
             <label>
               Unified profiles / people
-              <input id="unifiedProfiles" type="text" inputmode="numeric" value="0" data-number data-min="0">
+              <input id="unifiedProfiles" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="unifiedProfilesError">
+              <span class="field-help">Enter the final deduplicated <strong>Customers</strong> count across all Customer Insights - Data environments—not raw source records.</span>
+              <span class="field-error" id="unifiedProfilesError"></span>
             </label>
           </div>
         </section>
 
-        <section class="card">
-          <h2>4. Capacity tier pricing</h2>
-          <p class="small">The calculator automatically selects the lowest-cost eligible tier and rounds up to whole packs. Official pack sizes and tier thresholds are fixed; switch to custom quote pricing to edit the monthly pack prices.</p>
-          <div class="table-wrap">
+        <details class="card advanced-settings">
+          <summary>Advanced: capacity tier pricing</summary>
+          <div class="advanced-content">
+            <p class="small">The calculator automatically selects the lowest-cost eligible tier and rounds up to whole packs. Switch to custom quote pricing above to edit monthly pack prices.</p>
+            <div class="table-wrap">
             <table>
               <thead>
                 <tr>
@@ -951,8 +1063,9 @@
                 </tr>
               </tbody>
             </table>
+            </div>
           </div>
-        </section>
+        </details>
 
         <section class="card">
           <h2>Sources and assumptions</h2>
@@ -969,7 +1082,7 @@
         </section>
       </div>
 
-      <aside class="card summary-card">
+      <aside class="card summary-card" id="estimate-section">
         <h2>Cost estimate</h2>
         <div class="metric-grid">
           <div class="metric">
@@ -1022,6 +1135,13 @@
       </aside>
     </section>
   </main>
+  <div class="mobile-total">
+    <div>
+      <span>Estimated monthly total</span>
+      <strong id="mobileMonthlyOut">$1,700</strong>
+    </div>
+    <a href="#estimate-section">View details</a>
+  </div>
 
   <script>
     const channels = [
@@ -1053,9 +1173,9 @@
     };
 
     const ids = [
-      "licenseType", "pricingMode", "basePrice", "includedInteracted",
+      "licenseType", "pricingMode", "usageMethod", "basePrice", "includedInteracted",
       "includedUnified", "attachEligible", "rollingInteracted",
-      "peakInteractionsOverride", "unifiedProfiles", "interactedT1Price",
+      "peakInteractionsOverride", "estimatedAnnualInteracted", "unifiedProfiles", "interactedT1Price",
       "interactedT2Price", "interactedT3Price", "unifiedT1Price",
       "unifiedT2Price", "unifiedT3Price"
     ];
@@ -1067,6 +1187,36 @@
       const rawValue = input.value.replace(/[$,\s]/g, "");
       const value = Number(rawValue);
       return Number.isFinite(value) ? value : fallback;
+    }
+
+    function validateInput(input) {
+      if (input.readOnly || input.disabled || input.closest(".hidden")) {
+        input.removeAttribute("aria-invalid");
+        return true;
+      }
+
+      const rawValue = input.value.replace(/[$,\s]/g, "").trim();
+      const value = Number(rawValue);
+      const minimum = input.hasAttribute("data-min") ? Number(input.dataset.min) : 0;
+      const valid = rawValue !== "" && Number.isFinite(value) && value >= minimum;
+      const error = input.dataset.error ? document.getElementById(input.dataset.error) : null;
+
+      input.setAttribute("aria-invalid", String(!valid));
+      if (error) {
+        error.textContent = valid
+          ? ""
+          : `Enter a number greater than or equal to ${fmtNumber.format(minimum)}.`;
+      }
+      return valid;
+    }
+
+    function validateActiveInputs() {
+      const inputs = [...document.querySelectorAll("[data-user-input]")]
+        .filter((input) => !input.closest(".hidden"));
+      if (el.pricingMode.value === "custom") {
+        inputs.push(el.basePrice, ...document.querySelectorAll("[data-tier-price]"));
+      }
+      return inputs.every(validateInput);
     }
 
     function money(value) {
@@ -1082,6 +1232,10 @@
         return;
       }
 
+      if (!validateInput(input)) {
+        return;
+      }
+
       const minimum = input.hasAttribute("data-min") ? Number(input.dataset.min) : -Infinity;
       const maximumFractionDigits = Number(input.dataset.maxFractionDigits || 0);
       input.value = new Intl.NumberFormat("en-US", { maximumFractionDigits })
@@ -1092,8 +1246,8 @@
       document.getElementById("channelRows").innerHTML = channels.map((channel) => `
         <tr>
           <td>${channel.label}</td>
-          <td><input id="${channel.id}Interactions" type="text" inputmode="numeric" value="${fmtNumber.format(channel.interactions)}" data-number data-min="0"></td>
-          <td><input id="${channel.id}Avg" type="text" inputmode="decimal" value="${channel.avg}" data-number data-min="0.01" data-max-fraction-digits="2"></td>
+          <td><input id="${channel.id}Interactions" aria-label="${channel.label} peak monthly interactions" type="text" inputmode="numeric" value="${fmtNumber.format(channel.interactions)}" data-number data-min="0" data-user-input></td>
+          <td><input id="${channel.id}Avg" aria-label="${channel.label} average interactions per person" type="text" inputmode="decimal" value="${channel.avg}" data-number data-min="0.01" data-max-fraction-digits="2" data-user-input></td>
           <td class="amount" id="${channel.id}People">0</td>
         </tr>
       `).join("");
@@ -1198,14 +1352,48 @@
       document.getElementById("attachWarning").classList.toggle("hidden", !isAttach || el.attachEligible.checked);
     }
 
+    function updateUsageMethod() {
+      const isKnown = el.usageMethod.value === "known";
+      document.getElementById("knownUsagePanel").classList.toggle("hidden", !isKnown);
+      document.getElementById("guidedUsagePanel").classList.toggle("hidden", isKnown);
+      document.querySelectorAll("[data-user-input]").forEach((input) => {
+        if (input.closest(".hidden")) {
+          input.removeAttribute("aria-invalid");
+          const error = input.dataset.error ? document.getElementById(input.dataset.error) : null;
+          if (error) {
+            error.textContent = "";
+          }
+        }
+      });
+    }
+
+    function showInvalidEstimate() {
+      ["interactedPeopleOut", "unifiedProfilesOut", "packsOut"].forEach((id) => {
+        document.getElementById(id).textContent = "--";
+      });
+      ["tenantCostOut", "interactedAddOnOut", "unifiedAddOnOut", "monthlyOut", "mobileMonthlyOut"].forEach((id) => {
+        document.getElementById(id).textContent = "--";
+      });
+      document.getElementById("termOut").textContent = "Correct the highlighted fields to calculate an estimate.";
+      document.getElementById("methodOut").textContent = "The estimate is paused until all visible fields contain valid numbers.";
+    }
+
     function calculate() {
-      const channelInputs = getChannelInputs();
+      if (!validateActiveInputs()) {
+        showInvalidEstimate();
+        return null;
+      }
+
+      const isKnownUsage = el.usageMethod.value === "known";
+      const channelInputs = isKnownUsage ? [] : getChannelInputs();
       const estimatedPeople = channelInputs.reduce((sum, channel) => sum + channel.people, 0);
       const channelInteractions = channelInputs.reduce((sum, channel) => sum + channel.interactions, 0);
-      const peakInteractions = el.peakInteractionsOverride.value.trim() === ""
-        ? channelInteractions
-        : numberValue("peakInteractionsOverride");
-      const rollingInteracted = numberValue("rollingInteracted");
+      const peakInteractions = isKnownUsage
+        ? numberValue("peakInteractionsOverride")
+        : channelInteractions;
+      const rollingInteracted = isKnownUsage
+        ? numberValue("rollingInteracted")
+        : numberValue("estimatedAnnualInteracted");
       const interactionCapacity = Math.ceil(peakInteractions / 10);
       const interactedPeople = Math.max(rollingInteracted, estimatedPeople, interactionCapacity);
       const unifiedProfiles = numberValue("unifiedProfiles");
@@ -1229,6 +1417,7 @@
       document.getElementById("interactedAddOnOut").textContent = money(interactedCalc.cost);
       document.getElementById("unifiedAddOnOut").textContent = money(unifiedCalc.cost);
       document.getElementById("monthlyOut").textContent = money(monthlyTotal);
+      document.getElementById("mobileMonthlyOut").textContent = money(monthlyTotal);
       document.getElementById("termOut").textContent = `Annual estimate: ${money(monthlyTotal * 12)} (monthly prices paid yearly)`;
       document.getElementById("interactedTierOut").textContent = `Interacted: ${interactedCalc.name}`;
       document.getElementById("interactedDetailOut").textContent = interactedCalc.units
@@ -1282,9 +1471,16 @@
         calculate();
       });
 
+      el.usageMethod.addEventListener("change", () => {
+        updateUsageMethod();
+        calculate();
+      });
+
       document.querySelectorAll("[data-currency]").forEach((input) => {
         input.addEventListener("blur", () => {
-          formatCurrencyInput(input);
+          if (validateInput(input)) {
+            formatCurrencyInput(input);
+          }
           calculate();
         });
       });
@@ -1304,20 +1500,30 @@
         el.licenseType.value = "standalone";
         el.pricingMode.value = "official";
         el.attachEligible.checked = false;
+        el.usageMethod.value = "known";
         el.includedInteracted.value = 10000;
         el.includedUnified.value = 100000;
         el.rollingInteracted.value = 0;
-        el.peakInteractionsOverride.value = "";
+        el.peakInteractionsOverride.value = 0;
+        el.estimatedAnnualInteracted.value = 0;
         el.unifiedProfiles.value = 0;
         setOfficialPrices();
         updatePricingMode();
         updateAttachState();
+        updateUsageMethod();
+        document.querySelectorAll("[aria-invalid]").forEach((input) => input.removeAttribute("aria-invalid"));
+        document.querySelectorAll(".field-error").forEach((error) => {
+          error.textContent = "";
+        });
         document.querySelectorAll("[data-number]").forEach((input) => formatNumberInput(input));
         calculate();
       });
 
       document.getElementById("copySummary").addEventListener("click", async () => {
         const result = calculate();
+        if (!result) {
+          return;
+        }
         const summary = [
           "Dynamics 365 Customer Insights pricing estimate",
           `Monthly total: ${money(result.monthlyTotal)}`,
@@ -1346,6 +1552,7 @@
     setOfficialPrices();
     updatePricingMode();
     updateAttachState();
+    updateUsageMethod();
     bindEvents();
     calculate();
   </script>
