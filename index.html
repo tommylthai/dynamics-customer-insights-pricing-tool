@@ -359,6 +359,9 @@
 
     .people-guide-item {
       position: relative;
+      display: grid;
+      align-content: start;
+      gap: 14px;
       border: 1px solid var(--cp-border);
       border-radius: 14px;
       background: var(--cp-surface);
@@ -378,13 +381,41 @@
     }
 
     .people-guide-item h2 {
-      margin-bottom: 6px;
+      margin-bottom: -4px;
       color: var(--cp-accent);
     }
 
     .people-guide-item p {
       margin-bottom: 0;
       color: var(--cp-text-muted);
+    }
+
+    .people-guide-item label {
+      color: var(--cp-text);
+    }
+
+    .usage-accuracy {
+      border-top: 1px solid var(--cp-border);
+      padding-top: 12px;
+    }
+
+    .usage-accuracy summary {
+      cursor: pointer;
+      color: var(--cp-link);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .usage-accuracy label {
+      margin-top: 12px;
+    }
+
+    .usage-table {
+      margin-top: 14px;
+    }
+
+    #usage-section.guided-mode .people-guide-item {
+      grid-column: 1 / -1;
     }
 
     .brand {
@@ -615,7 +646,7 @@
     }
 
     .usage-mode {
-      margin-bottom: 16px;
+      margin-bottom: 2px;
     }
 
     .small {
@@ -911,7 +942,7 @@
       <summary>
         <span class="how-to-heading">
           <strong>Quick start: how to use this tool</strong>
-          <span>Choose a license, enter usage, and review the automatically updated estimate.</span>
+          <span>Enter usage, choose a license, and review the automatically updated estimate.</span>
         </span>
         <span class="how-to-toggle" aria-hidden="true"></span>
       </summary>
@@ -919,18 +950,18 @@
         <div class="walkthrough-grid">
           <article class="walkthrough-step">
             <span class="step-number">1</span>
-            <h3>Choose the license</h3>
-            <p>Use <strong>Customer Insights</strong> unless the customer owns at least 10 qualifying licenses for one eligible Dynamics 365 application. Only then select and confirm <strong>Customer Insights Attach</strong>.</p>
+            <h3>Enter interactions</h3>
+            <p>Enter the total number of interactions expected in the busiest month, or estimate the total by email, SMS, push, voice, and custom channel.</p>
           </article>
           <article class="walkthrough-step">
             <span class="step-number">2</span>
-            <h3>Enter Journeys usage</h3>
-            <p>Enter the number of entities contacted during the last 12 months. Then enter the highest monthly interaction volume, or complete the channel table if that total is unknown.</p>
+            <h3>Enter unified people</h3>
+            <p>Enter the total number of final, deduplicated customer profiles across all Customer Insights - Data environments.</p>
           </article>
           <article class="walkthrough-step">
             <span class="step-number">3</span>
-            <h3>Enter Data usage</h3>
-            <p>Enter the total number of unified customer profiles across all Customer Insights - Data environments in the tenant. Do not enter the number of raw source records.</p>
+            <h3>Choose the license</h3>
+            <p>Use <strong>Customer Insights</strong> unless the customer owns at least 10 qualifying licenses for one eligible Dynamics 365 application.</p>
           </article>
           <article class="walkthrough-step">
             <span class="step-number">4</span>
@@ -944,40 +975,91 @@
             <h3>What information should I gather?</h3>
             <ul>
               <li>Whether the customer qualifies for Attach pricing.</li>
-              <li>Rolling 12-month interacted entities from Journeys quota usage.</li>
-              <li>Highest expected monthly email, SMS, push, voice, and custom-channel sends.</li>
+              <li>Total interactions expected in the busiest month.</li>
+              <li>Current interacted-people usage from Journeys quota limits, if available.</li>
               <li>Total unified profiles across the tenant.</li>
             </ul>
           </div>
           <div class="how-to-panel">
             <h3>Simple example</h3>
             <p class="example-flow">
-              <span><strong>Customer input:</strong> 75,000 interacted entities, 600,000 peak monthly interactions, and 300,000 unified profiles.</span>
-              <span><strong>Tool behavior:</strong> It compares 75,000 entities with 60,000 people required for interaction volume, uses 75,000, and automatically selects valid interacted and unified capacity tiers.</span>
+              <span><strong>Customer input:</strong> 600,000 interactions in the busiest month and 300,000 unified people.</span>
+              <span><strong>Tool behavior:</strong> It converts monthly interaction volume into required interacted capacity, then automatically selects valid interacted and unified capacity tiers.</span>
               <span><strong>Result:</strong> Review the monthly and annual list-price estimate in the right-hand panel.</span>
             </p>
           </div>
         </div>
 
-        <a class="start-link" href="#license-section">Start with the tenant license</a>
+        <a class="start-link" href="#usage-section">Start with your usage</a>
       </div>
     </details>
 
-    <section class="people-guide" aria-label="People capacity definitions">
+    <section class="people-guide" id="usage-section" aria-label="Customer Insights usage inputs">
       <div class="people-guide-item">
-        <h2>Interacted people</h2>
-        <p>Dataverse entities contacted or engaged through Customer Insights - Journeys during the rolling 12-month measurement period. Monthly interactions are limited to 10 times the licensed interacted-people capacity.</p>
+        <h2>Interactions</h2>
+        <p>Messages sent through email, SMS, push, voice, or custom channels. Use the total from the busiest month—not a yearly total or monthly average.</p>
+        <label class="usage-mode">
+          How would you like to enter interactions?
+          <select id="usageMethod">
+            <option value="known">Enter one total</option>
+            <option value="guided">Estimate by channel</option>
+          </select>
+        </label>
+        <div id="knownUsagePanel">
+          <label>
+            Total number of interactions in your busiest month
+            <input id="peakInteractionsOverride" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="peakInteractionsError">
+            <span class="field-help">Include outbound email, SMS, push, voice, and custom-channel sends.</span>
+            <span class="field-error" id="peakInteractionsError"></span>
+          </label>
+          <details class="usage-accuracy">
+            <summary>Optional: improve accuracy with current quota usage</summary>
+            <label>
+              Interacted people currently shown in Journeys quota limits
+              <input id="rollingInteracted" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="rollingInteractedError">
+              <span class="field-help">Find this in Customer Insights - Journeys under <strong>Settings → Quota limits</strong>. Leave at 0 if unavailable.</span>
+              <span class="field-error" id="rollingInteractedError"></span>
+            </label>
+          </details>
+        </div>
+        <div id="guidedUsagePanel" class="hidden">
+          <label>
+            Estimated interacted people over the last 12 months
+            <input id="estimatedAnnualInteracted" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="estimatedAnnualError">
+            <span class="field-help">Use your best estimate of distinct contacts, leads, accounts, or profiles reached.</span>
+            <span class="field-error" id="estimatedAnnualError"></span>
+          </label>
+          <div class="table-wrap usage-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Channel</th>
+                  <th>Peak monthly interactions</th>
+                  <th>Avg interactions / person</th>
+                  <th>Estimated people</th>
+                </tr>
+              </thead>
+              <tbody id="channelRows"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
       <div class="people-guide-item">
         <h2>Unified people</h2>
         <p>Distinct customer profiles created in Customer Insights - Data after records from multiple sources are combined and deduplicated.</p>
+        <label>
+          Total unified people
+          <input id="unifiedProfiles" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="unifiedProfilesError">
+          <span class="field-help">Enter the final deduplicated <strong>Customers</strong> count across all environments—not raw source records.</span>
+          <span class="field-error" id="unifiedProfilesError"></span>
+        </label>
       </div>
     </section>
 
     <section class="grid">
       <div class="stack">
         <section class="card" id="license-section">
-          <h2>1. Tenant license</h2>
+          <h2>Tenant license</h2>
           <div class="entitlement-grid">
             <div class="entitlement">
               <span>Included interacted people</span>
@@ -1032,68 +1114,6 @@
               </label>
             </div>
           </details>
-        </section>
-
-        <section class="card">
-          <h2>2. Journey interaction inputs</h2>
-          <p class="small">Choose the path that best matches the information you have. You can change this choice at any time.</p>
-          <label class="usage-mode">
-            How would you like to enter Journeys usage?
-            <select id="usageMethod">
-              <option value="known">I know my usage totals</option>
-              <option value="guided">Help me estimate by channel</option>
-            </select>
-          </label>
-          <div class="form-grid" id="knownUsagePanel" style="margin-bottom: 16px;">
-            <label>
-              People, leads, accounts, or profiles contacted in the last 12 months
-              <input id="rollingInteracted" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="rollingInteractedError">
-              <span class="field-help">In Customer Insights - Journeys, go to <strong>Settings → Quota limits</strong> and use the interacted-people usage.</span>
-              <span class="field-error" id="rollingInteractedError"></span>
-            </label>
-            <label>
-              Highest expected interactions in one month
-              <input id="peakInteractionsOverride" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="peakInteractionsError">
-              <span class="field-help">Include outbound email, SMS, push, voice, and custom-channel sends during the busiest month.</span>
-              <span class="field-error" id="peakInteractionsError"></span>
-            </label>
-          </div>
-          <div id="guidedUsagePanel" class="hidden">
-            <div class="form-grid" style="margin-bottom: 16px;">
-              <label>
-                Estimated distinct entities contacted over 12 months
-                <input id="estimatedAnnualInteracted" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="estimatedAnnualError">
-                <span class="field-help">Count contacts, leads, accounts, and profiles once each when possible. Use your best conservative estimate.</span>
-                <span class="field-error" id="estimatedAnnualError"></span>
-              </label>
-            </div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Channel</th>
-                    <th>Peak monthly interactions</th>
-                    <th>Avg interactions / person</th>
-                    <th>Estimated people</th>
-                  </tr>
-                </thead>
-                <tbody id="channelRows"></tbody>
-              </table>
-            </div>
-          </div>
-          <p class="assumption-note">Required interacted capacity is the highest of the rolling 12-month entity count, the estimated entities from channel activity, or peak monthly interactions divided by 10.</p>
-        </section>
-
-        <section class="card">
-          <h2>3. Data/unified profile inputs</h2>
-          <div class="form-grid">
-            <label>
-              Unified profiles / people
-              <input id="unifiedProfiles" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="unifiedProfilesError">
-              <span class="field-help">Enter the final deduplicated <strong>Customers</strong> count across all Customer Insights - Data environments—not raw source records.</span>
-              <span class="field-error" id="unifiedProfilesError"></span>
-            </label>
-          </div>
         </section>
 
         <details class="card advanced-settings">
@@ -1442,6 +1462,7 @@
       const isKnown = el.usageMethod.value === "known";
       document.getElementById("knownUsagePanel").classList.toggle("hidden", !isKnown);
       document.getElementById("guidedUsagePanel").classList.toggle("hidden", isKnown);
+      document.getElementById("usage-section").classList.toggle("guided-mode", !isKnown);
       document.querySelectorAll("[data-user-input]").forEach((input) => {
         if (input.closest(".hidden")) {
           input.removeAttribute("aria-invalid");
@@ -1514,7 +1535,7 @@
         ? `${fmtNumber.format(includedUnified)} included + ${unifiedCalc.units} x ${fmtNumber.format(unifiedCalc.packSize)} add-on packs at ${money(unifiedCalc.price)} = ${fmtNumber.format(unifiedCalc.entitledCapacity)} total entitlement.`
         : `${fmtNumber.format(includedUnified)} included in the tenant license; no add-on packs required.`;
       document.getElementById("methodOut").textContent =
-        `Required interacted capacity uses the maximum of rolling entities (${fmtNumber.format(rollingInteracted)}), estimated channel entities (${fmtNumber.format(estimatedPeople)}), and peak interactions divided by 10 (${fmtNumber.format(interactionCapacity)}). ${attachConfirmed ? "" : "Attach eligibility is unconfirmed, so standard tenant pricing is used."}`;
+        `Required interacted capacity uses the highest of current interacted-people usage (${fmtNumber.format(rollingInteracted)}), estimated people from channel activity (${fmtNumber.format(estimatedPeople)}), and busiest-month interactions divided by 10 (${fmtNumber.format(interactionCapacity)}). ${attachConfirmed ? "" : "Attach eligibility is unconfirmed, so standard tenant pricing is used."}`;
 
       return {
         interactedPeople,
