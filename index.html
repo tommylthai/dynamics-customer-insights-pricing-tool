@@ -394,30 +394,6 @@
       color: var(--cp-text);
     }
 
-    .usage-accuracy {
-      border-top: 1px solid var(--cp-border);
-      padding-top: 12px;
-    }
-
-    .usage-accuracy summary {
-      cursor: pointer;
-      color: var(--cp-link);
-      font-size: 0.82rem;
-      font-weight: 700;
-    }
-
-    .usage-accuracy label {
-      margin-top: 12px;
-    }
-
-    .usage-table {
-      margin-top: 14px;
-    }
-
-    #usage-section.guided-mode .people-guide-item {
-      grid-column: 1 / -1;
-    }
-
     .brand {
       position: relative;
       z-index: 1;
@@ -643,10 +619,6 @@
     .advanced-content {
       border-top: 1px solid var(--cp-border);
       padding: 16px;
-    }
-
-    .usage-mode {
-      margin-bottom: 2px;
     }
 
     .small {
@@ -1007,7 +979,7 @@
           <article class="walkthrough-step">
             <span class="step-number">1</span>
             <h3>Enter interactions</h3>
-            <p>Enter the total number of interactions expected in the busiest month, or estimate the total by email, SMS, push, voice, and custom channel.</p>
+            <p>Enter the total number of interactions expected across all channels in the busiest month.</p>
           </article>
           <article class="walkthrough-step">
             <span class="step-number">2</span>
@@ -1032,7 +1004,6 @@
             <ul>
               <li>Whether the customer qualifies for Attach pricing.</li>
               <li>Total interactions expected in the busiest month.</li>
-              <li>Current interacted-people usage from Journeys quota limits, if available.</li>
               <li>Total unified profiles across the tenant.</li>
             </ul>
           </div>
@@ -1054,51 +1025,12 @@
       <div class="people-guide-item">
         <h2>Interactions</h2>
         <p>Messages sent through email, SMS, push, voice, or custom channels. Use the total from the busiest month—not a yearly total or monthly average.</p>
-        <label class="usage-mode">
-          How would you like to enter interactions?
-          <select id="usageMethod">
-            <option value="known">Enter one total</option>
-            <option value="guided">Estimate by channel</option>
-          </select>
+        <label>
+          Total interactions in your busiest month
+          <input id="peakInteractionsOverride" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="peakInteractionsError">
+          <span class="field-help">Include outbound email, SMS, push, voice, and custom-channel sends. Microsoft allows 10 monthly interactions per licensed interacted person, so 750,000 interactions require at least 75,000 interacted-person capacity.</span>
+          <span class="field-error" id="peakInteractionsError"></span>
         </label>
-        <div id="knownUsagePanel">
-          <label>
-            Total number of interactions in your busiest month
-            <input id="peakInteractionsOverride" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="peakInteractionsError">
-            <span class="field-help">Include outbound email, SMS, push, voice, and custom-channel sends. Microsoft allows 10 monthly interactions per licensed interacted person, so 750,000 interactions require at least 75,000 interacted-person capacity.</span>
-            <span class="field-error" id="peakInteractionsError"></span>
-          </label>
-          <details class="usage-accuracy">
-            <summary>Optional: improve accuracy with current quota usage</summary>
-            <label>
-              Interacted people currently shown in Journeys quota limits
-              <input id="rollingInteracted" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="rollingInteractedError">
-              <span class="field-help">Find this in Customer Insights - Journeys under <strong>Settings → Quota limits</strong>. Leave at 0 if unavailable.</span>
-              <span class="field-error" id="rollingInteractedError"></span>
-            </label>
-          </details>
-        </div>
-        <div id="guidedUsagePanel" class="hidden">
-          <label>
-            Estimated interacted people over the last 12 months
-            <input id="estimatedAnnualInteracted" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="estimatedAnnualError">
-            <span class="field-help">Use your best estimate of distinct contacts, leads, accounts, or profiles reached.</span>
-            <span class="field-error" id="estimatedAnnualError"></span>
-          </label>
-          <div class="table-wrap usage-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Channel</th>
-                  <th>Peak monthly interactions</th>
-                  <th>Avg interactions / person</th>
-                  <th>Estimated people</th>
-                </tr>
-              </thead>
-              <tbody id="channelRows"></tbody>
-            </table>
-          </div>
-        </div>
       </div>
       <div class="people-guide-item">
         <h2>Unified people</h2>
@@ -1333,13 +1265,6 @@
   </div>
 
   <script>
-    const channels = [
-      { id: "email", label: "Email", interactions: 0, avg: 1 },
-      { id: "sms", label: "Text/SMS", interactions: 0, avg: 1 },
-      { id: "push", label: "Push/in-app", interactions: 0, avg: 1 },
-      { id: "custom", label: "Custom/other", interactions: 0, avg: 1 }
-    ];
-
     const fmtCurrency = new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
@@ -1372,9 +1297,9 @@
     };
 
     const ids = [
-      "licenseType", "pricingMode", "usageMethod", "basePrice", "includedInteracted",
-      "includedUnified", "attachEligible", "rollingInteracted",
-      "peakInteractionsOverride", "estimatedAnnualInteracted", "unifiedProfiles", "interactedT1Price",
+      "licenseType", "pricingMode", "basePrice", "includedInteracted",
+      "includedUnified", "attachEligible", "peakInteractionsOverride",
+      "unifiedProfiles", "interactedT1Price",
       "interactedT2Price", "interactedT3Price", "unifiedT1Price",
       "unifiedT2Price", "unifiedT3Price"
     ];
@@ -1439,28 +1364,6 @@
       const maximumFractionDigits = Number(input.dataset.maxFractionDigits || 0);
       input.value = new Intl.NumberFormat("en-US", { maximumFractionDigits })
         .format(Math.max(minimum, value));
-    }
-
-    function renderRows() {
-      document.getElementById("channelRows").innerHTML = channels.map((channel) => `
-        <tr>
-          <td>${channel.label}</td>
-          <td><input id="${channel.id}Interactions" aria-label="${channel.label} peak monthly interactions" type="text" inputmode="numeric" value="${fmtNumber.format(channel.interactions)}" data-number data-min="0" data-user-input></td>
-          <td><input id="${channel.id}Avg" aria-label="${channel.label} average interactions per person" type="text" inputmode="decimal" value="${channel.avg}" data-number data-min="0.01" data-max-fraction-digits="2" data-user-input></td>
-          <td class="amount" id="${channel.id}People">0</td>
-        </tr>
-      `).join("");
-
-    }
-
-    function getChannelInputs() {
-      return channels.map((channel) => {
-        const interactions = numberValue(`${channel.id}Interactions`);
-        const avg = Math.max(0.01, numberValue(`${channel.id}Avg`, 1));
-        const people = Math.ceil(interactions / avg);
-        document.getElementById(`${channel.id}People`).textContent = fmtNumber.format(people);
-        return { ...channel, interactions, avg, people };
-      });
     }
 
     function getTierDefinitions() {
@@ -1551,22 +1454,6 @@
       document.getElementById("attachWarning").classList.toggle("hidden", !isAttach || el.attachEligible.checked);
     }
 
-    function updateUsageMethod() {
-      const isKnown = el.usageMethod.value === "known";
-      document.getElementById("knownUsagePanel").classList.toggle("hidden", !isKnown);
-      document.getElementById("guidedUsagePanel").classList.toggle("hidden", isKnown);
-      document.getElementById("usage-section").classList.toggle("guided-mode", !isKnown);
-      document.querySelectorAll("[data-user-input]").forEach((input) => {
-        if (input.closest(".hidden")) {
-          input.removeAttribute("aria-invalid");
-          const error = input.dataset.error ? document.getElementById(input.dataset.error) : null;
-          if (error) {
-            error.textContent = "";
-          }
-        }
-      });
-    }
-
     function showInvalidEstimate() {
       ["interactedPeopleOut", "unifiedProfilesOut", "packsOut"].forEach((id) => {
         document.getElementById(id).textContent = "--";
@@ -1609,18 +1496,9 @@
         return null;
       }
 
-      const isKnownUsage = el.usageMethod.value === "known";
-      const channelInputs = isKnownUsage ? [] : getChannelInputs();
-      const estimatedPeople = channelInputs.reduce((sum, channel) => sum + channel.people, 0);
-      const channelInteractions = channelInputs.reduce((sum, channel) => sum + channel.interactions, 0);
-      const peakInteractions = isKnownUsage
-        ? numberValue("peakInteractionsOverride")
-        : channelInteractions;
-      const rollingInteracted = isKnownUsage
-        ? numberValue("rollingInteracted")
-        : numberValue("estimatedAnnualInteracted");
+      const peakInteractions = numberValue("peakInteractionsOverride");
       const interactionCapacity = Math.ceil(peakInteractions / 10);
-      const interactedPeople = Math.max(rollingInteracted, estimatedPeople, interactionCapacity);
+      const interactedPeople = interactionCapacity;
       const unifiedProfiles = numberValue("unifiedProfiles");
       const includedInteracted = numberValue("includedInteracted");
       const includedUnified = numberValue("includedUnified");
@@ -1654,7 +1532,7 @@
         ? `${fmtNumber.format(includedUnified)} included + ${unifiedCalc.units} x ${fmtNumber.format(unifiedCalc.packSize)} add-on packs at ${money(unifiedCalc.price)} = ${fmtNumber.format(unifiedCalc.entitledCapacity)} total entitlement.`
         : `${fmtNumber.format(includedUnified)} included in the tenant license; no add-on packs required.`;
       document.getElementById("methodOut").textContent =
-        `Required interacted capacity uses the highest of current interacted-people usage (${fmtNumber.format(rollingInteracted)}), estimated people from channel activity (${fmtNumber.format(estimatedPeople)}), and busiest-month interactions divided by 10 (${fmtNumber.format(interactionCapacity)}). ${attachConfirmed ? "" : "Attach eligibility is unconfirmed, so standard tenant pricing is used."}`;
+        `Required interacted capacity is the busiest-month interaction total (${fmtNumber.format(peakInteractions)}) divided by 10, rounded up (${fmtNumber.format(interactionCapacity)}). ${attachConfirmed ? "" : "Attach eligibility is unconfirmed, so standard tenant pricing is used."}`;
       document.getElementById("databaseStorageOut").textContent = `${fmtStorage.format(storage.database)} GB`;
       document.getElementById("fileStorageOut").textContent = `${fmtStorage.format(storage.file)} GB`;
       document.getElementById("logStorageOut").textContent = `${fmtStorage.format(storage.log)} GB`;
@@ -1665,8 +1543,6 @@
 
       return {
         interactedPeople,
-        rollingInteracted,
-        estimatedPeople,
         peakInteractions,
         interactionCapacity,
         unifiedProfiles,
@@ -1705,11 +1581,6 @@
         calculate();
       });
 
-      el.usageMethod.addEventListener("change", () => {
-        updateUsageMethod();
-        calculate();
-      });
-
       document.querySelectorAll("[data-currency]").forEach((input) => {
         input.addEventListener("blur", () => {
           if (validateInput(input)) {
@@ -1727,24 +1598,16 @@
       });
 
       document.getElementById("resetDefaults").addEventListener("click", () => {
-        channels.forEach((channel) => {
-          document.getElementById(`${channel.id}Interactions`).value = channel.interactions;
-          document.getElementById(`${channel.id}Avg`).value = channel.avg;
-        });
         el.licenseType.value = "standalone";
         el.pricingMode.value = "official";
         el.attachEligible.checked = false;
-        el.usageMethod.value = "known";
         el.includedInteracted.value = 10000;
         el.includedUnified.value = 100000;
-        el.rollingInteracted.value = 0;
         el.peakInteractionsOverride.value = 0;
-        el.estimatedAnnualInteracted.value = 0;
         el.unifiedProfiles.value = 0;
         setOfficialPrices();
         updatePricingMode();
         updateAttachState();
-        updateUsageMethod();
         document.querySelectorAll("[aria-invalid]").forEach((input) => input.removeAttribute("aria-invalid"));
         document.querySelectorAll(".field-error").forEach((error) => {
           error.textContent = "";
@@ -1764,7 +1627,7 @@
           `Annual total: ${money(result.monthlyTotal * 12)} (paid yearly)`,
           `Tenant license: ${result.licenseName} at ${money(result.tenantCost)}`,
           `Required interacted capacity: ${fmtNumber.format(result.interactedPeople)}`,
-          `Interacted usage basis: ${fmtNumber.format(result.rollingInteracted)} rolling entities; ${fmtNumber.format(result.peakInteractions)} peak monthly interactions`,
+          `Interaction usage: ${fmtNumber.format(result.peakInteractions)} total interactions in the busiest month`,
           `Interacted add-ons: ${result.interactedCalc.name}, ${result.interactedCalc.units} packs, ${money(result.interactedCost)}`,
           `Unified profiles: ${fmtNumber.format(result.unifiedProfiles)}`,
           `Unified add-ons: ${result.unifiedCalc.name}, ${result.unifiedCalc.units} packs, ${money(result.unifiedCost)}`,
@@ -1783,11 +1646,9 @@
       });
     }
 
-    renderRows();
     setOfficialPrices();
     updatePricingMode();
     updateAttachState();
-    updateUsageMethod();
     bindEvents();
     calculate();
   </script>
