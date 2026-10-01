@@ -1421,12 +1421,12 @@
       document.getElementById("termOut").textContent = `Annual estimate: ${money(monthlyTotal * 12)} (monthly prices paid yearly)`;
       document.getElementById("interactedTierOut").textContent = `Interacted: ${interactedCalc.name}`;
       document.getElementById("interactedDetailOut").textContent = interactedCalc.units
-        ? `${interactedCalc.units} x ${fmtNumber.format(interactedCalc.packSize)} packs at ${money(interactedCalc.price)}; entitlement ${fmtNumber.format(interactedCalc.entitledCapacity)}.`
-        : "No add-on packs required.";
+        ? `${fmtNumber.format(includedInteracted)} included + ${interactedCalc.units} x ${fmtNumber.format(interactedCalc.packSize)} add-on packs at ${money(interactedCalc.price)} = ${fmtNumber.format(interactedCalc.entitledCapacity)} total entitlement.`
+        : `${fmtNumber.format(includedInteracted)} included in the tenant license; no add-on packs required.`;
       document.getElementById("unifiedTierOut").textContent = `Unified: ${unifiedCalc.name}`;
       document.getElementById("unifiedDetailOut").textContent = unifiedCalc.units
-        ? `${unifiedCalc.units} x ${fmtNumber.format(unifiedCalc.packSize)} packs at ${money(unifiedCalc.price)}; entitlement ${fmtNumber.format(unifiedCalc.entitledCapacity)}.`
-        : "No add-on packs required.";
+        ? `${fmtNumber.format(includedUnified)} included + ${unifiedCalc.units} x ${fmtNumber.format(unifiedCalc.packSize)} add-on packs at ${money(unifiedCalc.price)} = ${fmtNumber.format(unifiedCalc.entitledCapacity)} total entitlement.`
+        : `${fmtNumber.format(includedUnified)} included in the tenant license; no add-on packs required.`;
       document.getElementById("methodOut").textContent =
         `Required interacted capacity uses the maximum of rolling entities (${fmtNumber.format(rollingInteracted)}), estimated channel entities (${fmtNumber.format(estimatedPeople)}), and peak interactions divided by 10 (${fmtNumber.format(interactionCapacity)}). ${attachConfirmed ? "" : "Attach eligibility is unconfirmed, so standard tenant pricing is used."}`;
 
