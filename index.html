@@ -1008,7 +1008,7 @@
         <label>
           Total interactions
           <input id="totalInteractions" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="totalInteractionsError">
-          <span class="field-help">Include outbound email, SMS, push, voice, and custom-channel sends. The estimator applies the 10-to-1 licensing ratio, so 750,000 total interactions require at least 75,000 interacted-person capacity.</span>
+          <span class="field-help">Include outbound email, SMS, push, voice, and custom-channel sends. Each interaction entered is treated as one required unit of interacted-person capacity, so 750,000 interactions require 750,000 capacity.</span>
           <span class="field-error" id="totalInteractionsError"></span>
         </label>
       </div>
@@ -1151,7 +1151,7 @@
             <li>Capacity and Dataverse storage entitlements: <a href="https://go.microsoft.com/fwlink/?LinkId=866544" target="_blank" rel="noreferrer">Microsoft Dynamics 365 Licensing Guide</a>.</li>
             <li>Tenant license assumptions: Customer Insights <span class="mono">$1,700/month</span> or Customer Insights Attach <span class="mono">$1,000/month</span>, with <span class="mono">10,000</span> interacted people and <span class="mono">100,000</span> unified people included. Attach pricing requires a qualifying Dynamics 365 application.</li>
             <li>Official list prices are monthly amounts paid annually. Pricing was last verified against Microsoft sources on September 22, 2026.</li>
-            <li>Interacted people remain counted for 12 months after an interaction. This estimator applies Microsoft’s published 10-to-1 interaction-to-interacted-person capacity ratio directly to the total interactions entered.</li>
+            <li>This estimator treats the total interactions entered as the required interacted-person capacity on a 1-to-1 basis.</li>
             <li>Tier selection follows Microsoft pack thresholds and minimum quantities. At overlapping thresholds, the estimator selects the lowest-cost eligible tier.</li>
             <li>Dataverse storage assumptions: the base license includes <span class="mono">45 GB database</span>, <span class="mono">60 GB file</span>, and <span class="mono">4 GB log</span>. Additional capacity accrues at the published equivalent rate per 50,000 interacted people and 100,000 unified people.</li>
           </ul>
@@ -1497,7 +1497,7 @@
       }
 
       const totalInteractions = numberValue("totalInteractions");
-      const interactionCapacity = Math.ceil(totalInteractions / 10);
+      const interactionCapacity = Math.ceil(totalInteractions);
       const interactedPeople = interactionCapacity;
       const unifiedProfiles = numberValue("unifiedProfiles");
       const includedInteracted = numberValue("includedInteracted");
@@ -1529,14 +1529,14 @@
       document.getElementById("termOut").textContent = "Monthly list prices are shown alongside the annual amount paid over 12 months.";
       document.getElementById("interactedTierOut").textContent = `Interacted: ${interactedCalc.name}`;
       document.getElementById("interactedDetailOut").textContent = interactedCalc.units
-        ? `${fmtNumber.format(includedInteracted)} included + ${interactedCalc.units} x ${fmtNumber.format(interactedCalc.packSize)} add-on packs at ${money(interactedCalc.price)} = ${fmtNumber.format(interactedCalc.entitledCapacity)} interacted-person entitlement, covering up to ${fmtNumber.format(interactedCalc.entitledCapacity * 10)} interactions.`
-        : `${fmtNumber.format(includedInteracted)} included in the tenant license, covering up to ${fmtNumber.format(includedInteracted * 10)} interactions; no add-on packs required.`;
+        ? `${fmtNumber.format(includedInteracted)} included + ${interactedCalc.units} x ${fmtNumber.format(interactedCalc.packSize)} add-on packs at ${money(interactedCalc.price)} = ${fmtNumber.format(interactedCalc.entitledCapacity)} total interacted-person entitlement.`
+        : `${fmtNumber.format(includedInteracted)} included in the tenant license; no add-on packs required.`;
       document.getElementById("unifiedTierOut").textContent = `Unified: ${unifiedCalc.name}`;
       document.getElementById("unifiedDetailOut").textContent = unifiedCalc.units
         ? `${fmtNumber.format(includedUnified)} included + ${unifiedCalc.units} x ${fmtNumber.format(unifiedCalc.packSize)} add-on packs at ${money(unifiedCalc.price)} = ${fmtNumber.format(unifiedCalc.entitledCapacity)} total entitlement.`
         : `${fmtNumber.format(includedUnified)} included in the tenant license; no add-on packs required.`;
       document.getElementById("methodOut").textContent =
-        `Required interacted capacity is the total interactions entered (${fmtNumber.format(totalInteractions)}) divided by 10, rounded up (${fmtNumber.format(interactionCapacity)}). ${attachConfirmed ? "" : "Attach eligibility is unconfirmed, so standard tenant pricing is used."}`;
+        `Required interacted capacity matches the total interactions entered on a 1-to-1 basis: ${fmtNumber.format(totalInteractions)} interactions require ${fmtNumber.format(interactionCapacity)} capacity. ${attachConfirmed ? "" : "Attach eligibility is unconfirmed, so standard tenant pricing is used."}`;
       document.getElementById("databaseStorageOut").textContent = `${fmtStorage.format(storage.database)} GB`;
       document.getElementById("fileStorageOut").textContent = `${fmtStorage.format(storage.file)} GB`;
       document.getElementById("logStorageOut").textContent = `${fmtStorage.format(storage.log)} GB`;
