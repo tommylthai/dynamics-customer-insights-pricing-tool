@@ -696,24 +696,27 @@
       line-height: 1.05;
     }
 
-    .result-list {
-      display: grid;
-      gap: 10px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
+    .cost-table-wrap {
+      overflow: hidden;
+      border: 1px solid var(--cp-border);
+      border-radius: 12px;
     }
 
-    .result-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      border-bottom: 1px solid var(--cp-border);
-      padding: 10px 0;
+    .cost-table th:not(:first-child),
+    .cost-table td:not(:first-child) {
+      text-align: right;
     }
 
-    .result-row:last-child {
+    .cost-table tbody tr:last-child td {
       border-bottom: 0;
+    }
+
+    .cost-table tfoot td {
+      border-bottom: 0;
+      background: linear-gradient(135deg, #082743, #104a7b);
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 800;
     }
 
     .capacity-breakdown {
@@ -745,29 +748,6 @@
       font-variant-numeric: tabular-nums;
       font-weight: 700;
       white-space: nowrap;
-    }
-
-    .total {
-      margin-top: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 12px;
-      background: linear-gradient(135deg, #082743, #104a7b);
-      color: #eaf4fd;
-      box-shadow: 0 14px 32px rgba(8, 39, 67, 0.24);
-      padding: 20px;
-    }
-
-    .total .amount {
-      display: block;
-      margin-top: 4px;
-      color: #ffffff;
-      font-size: clamp(2rem, 5vw, 3.4rem);
-      letter-spacing: -0.04em;
-      line-height: 1;
-    }
-
-    .total .small {
-      color: #c8def1;
     }
 
     .actions {
@@ -979,7 +959,7 @@
           <article class="walkthrough-step">
             <span class="step-number">1</span>
             <h3>Enter interactions</h3>
-            <p>Enter the total number of interactions expected across all channels in the busiest month.</p>
+            <p>Enter the total number of interactions you want the estimate to cover across all channels.</p>
           </article>
           <article class="walkthrough-step">
             <span class="step-number">2</span>
@@ -1003,15 +983,15 @@
             <h3>What information should I gather?</h3>
             <ul>
               <li>Whether the customer qualifies for Attach pricing.</li>
-              <li>Total interactions expected in the busiest month.</li>
+              <li>Total interactions the estimate should cover.</li>
               <li>Total unified profiles across the tenant.</li>
             </ul>
           </div>
           <div class="how-to-panel">
             <h3>Simple example</h3>
             <p class="example-flow">
-              <span><strong>Customer input:</strong> 600,000 interactions in the busiest month and 300,000 unified people.</span>
-              <span><strong>Tool behavior:</strong> It converts monthly interaction volume into required interacted capacity, then automatically selects valid interacted and unified capacity tiers.</span>
+              <span><strong>Customer input:</strong> 600,000 total interactions and 300,000 unified people.</span>
+              <span><strong>Tool behavior:</strong> It converts the interaction total into required interacted capacity, then automatically selects valid interacted and unified capacity tiers.</span>
               <span><strong>Result:</strong> Review the monthly and annual list-price estimate in the right-hand panel.</span>
             </p>
           </div>
@@ -1024,12 +1004,12 @@
     <section class="people-guide" id="usage-section" aria-label="Customer Insights usage inputs">
       <div class="people-guide-item">
         <h2>Interactions</h2>
-        <p>Messages sent through email, SMS, push, voice, or custom channels. Use the total from the busiest month—not a yearly total or monthly average.</p>
+        <p>Messages sent through email, SMS, push, voice, or custom channels. Enter the total interaction volume you want this estimate to cover.</p>
         <label>
-          Total interactions in your busiest month
-          <input id="peakInteractionsOverride" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="peakInteractionsError">
-          <span class="field-help">Include outbound email, SMS, push, voice, and custom-channel sends. Microsoft allows 10 monthly interactions per licensed interacted person, so 750,000 interactions require at least 75,000 interacted-person capacity.</span>
-          <span class="field-error" id="peakInteractionsError"></span>
+          Total interactions
+          <input id="totalInteractions" type="text" inputmode="numeric" value="0" data-number data-min="0" data-user-input data-error="totalInteractionsError">
+          <span class="field-help">Include outbound email, SMS, push, voice, and custom-channel sends. The estimator applies the 10-to-1 licensing ratio, so 750,000 total interactions require at least 75,000 interacted-person capacity.</span>
+          <span class="field-error" id="totalInteractionsError"></span>
         </label>
       </div>
       <div class="people-guide-item">
@@ -1171,7 +1151,7 @@
             <li>Capacity and Dataverse storage entitlements: <a href="https://go.microsoft.com/fwlink/?LinkId=866544" target="_blank" rel="noreferrer">Microsoft Dynamics 365 Licensing Guide</a>.</li>
             <li>Tenant license assumptions: Customer Insights <span class="mono">$1,700/month</span> or Customer Insights Attach <span class="mono">$1,000/month</span>, with <span class="mono">10,000</span> interacted people and <span class="mono">100,000</span> unified people included. Attach pricing requires a qualifying Dynamics 365 application.</li>
             <li>Official list prices are monthly amounts paid annually. Pricing was last verified against Microsoft sources on September 22, 2026.</li>
-            <li>Interacted people remain counted for 12 months after an interaction. The monthly interaction safe-use limit is 10 times the licensed interacted-people capacity.</li>
+            <li>Interacted people remain counted for 12 months after an interaction. This estimator applies Microsoft’s published 10-to-1 interaction-to-interacted-person capacity ratio directly to the total interactions entered.</li>
             <li>Tier selection follows Microsoft pack thresholds and minimum quantities. At overlapping thresholds, the estimator selects the lowest-cost eligible tier.</li>
             <li>Dataverse storage assumptions: the base license includes <span class="mono">45 GB database</span>, <span class="mono">60 GB file</span>, and <span class="mono">4 GB log</span>. Additional capacity accrues at the published equivalent rate per 50,000 interacted people and 100,000 unified people.</li>
           </ul>
@@ -1219,20 +1199,41 @@
             <strong id="packsOut">0</strong>
           </div>
         </div>
-        <ul class="result-list">
-          <li class="result-row">
-            <span>Tenant license</span>
-            <span class="amount" id="tenantCostOut">$0</span>
-          </li>
-          <li class="result-row">
-            <span>Interacted people add-ons</span>
-            <span class="amount" id="interactedAddOnOut">$0</span>
-          </li>
-          <li class="result-row">
-            <span>Unified profile add-ons</span>
-            <span class="amount" id="unifiedAddOnOut">$0</span>
-          </li>
-        </ul>
+        <div class="cost-table-wrap">
+          <table class="cost-table" aria-label="Monthly and annual cost estimate">
+            <thead>
+              <tr>
+                <th>Price component</th>
+                <th>Monthly price</th>
+                <th>Annual price</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Tenant license</td>
+                <td class="amount" id="tenantCostOut">$0</td>
+                <td class="amount" id="tenantAnnualOut">$0</td>
+              </tr>
+              <tr>
+                <td>Interacted people add-ons</td>
+                <td class="amount" id="interactedAddOnOut">$0</td>
+                <td class="amount" id="interactedAnnualOut">$0</td>
+              </tr>
+              <tr>
+                <td>Unified people add-ons</td>
+                <td class="amount" id="unifiedAddOnOut">$0</td>
+                <td class="amount" id="unifiedAnnualOut">$0</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>Estimated total</td>
+                <td class="amount" id="monthlyOut">$0</td>
+                <td class="amount" id="annualOut">$0</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
         <div class="capacity-breakdown">
           <div class="capacity-detail">
             <strong id="interactedTierOut">Interacted: Included capacity</strong>
@@ -1243,11 +1244,7 @@
             <span id="unifiedDetailOut">No add-on packs required.</span>
           </div>
         </div>
-        <div class="total">
-          <span>Estimated monthly total</span>
-          <span class="amount" id="monthlyOut">$0</span>
-          <p class="small" id="termOut" style="margin: 8px 0 0;">Annual estimate: $0</p>
-        </div>
+        <p class="small" id="termOut" style="margin: 14px 0 0;">Monthly prices are paid annually.</p>
         <div class="actions">
           <button class="primary" id="copySummary">Copy summary</button>
           <button id="resetDefaults">Reset defaults</button>
@@ -1298,7 +1295,7 @@
 
     const ids = [
       "licenseType", "pricingMode", "basePrice", "includedInteracted",
-      "includedUnified", "attachEligible", "peakInteractionsOverride",
+      "includedUnified", "attachEligible", "totalInteractions",
       "unifiedProfiles", "interactedT1Price",
       "interactedT2Price", "interactedT3Price", "unifiedT1Price",
       "unifiedT2Price", "unifiedT3Price"
@@ -1458,7 +1455,10 @@
       ["interactedPeopleOut", "unifiedProfilesOut", "packsOut"].forEach((id) => {
         document.getElementById(id).textContent = "--";
       });
-      ["tenantCostOut", "interactedAddOnOut", "unifiedAddOnOut", "monthlyOut", "mobileMonthlyOut"].forEach((id) => {
+      [
+        "tenantCostOut", "tenantAnnualOut", "interactedAddOnOut", "interactedAnnualOut",
+        "unifiedAddOnOut", "unifiedAnnualOut", "monthlyOut", "annualOut", "mobileMonthlyOut"
+      ].forEach((id) => {
         document.getElementById(id).textContent = "--";
       });
       document.getElementById("termOut").textContent = "Correct the highlighted fields to calculate an estimate.";
@@ -1496,8 +1496,8 @@
         return null;
       }
 
-      const peakInteractions = numberValue("peakInteractionsOverride");
-      const interactionCapacity = Math.ceil(peakInteractions / 10);
+      const totalInteractions = numberValue("totalInteractions");
+      const interactionCapacity = Math.ceil(totalInteractions / 10);
       const interactedPeople = interactionCapacity;
       const unifiedProfiles = numberValue("unifiedProfiles");
       const includedInteracted = numberValue("includedInteracted");
@@ -1518,21 +1518,25 @@
       document.getElementById("unifiedProfilesOut").textContent = fmtNumber.format(unifiedProfiles);
       document.getElementById("packsOut").textContent = fmtNumber.format(interactedCalc.units + unifiedCalc.units);
       document.getElementById("tenantCostOut").textContent = money(tenantCost);
+      document.getElementById("tenantAnnualOut").textContent = money(tenantCost * 12);
       document.getElementById("interactedAddOnOut").textContent = money(interactedCalc.cost);
+      document.getElementById("interactedAnnualOut").textContent = money(interactedCalc.cost * 12);
       document.getElementById("unifiedAddOnOut").textContent = money(unifiedCalc.cost);
+      document.getElementById("unifiedAnnualOut").textContent = money(unifiedCalc.cost * 12);
       document.getElementById("monthlyOut").textContent = money(monthlyTotal);
+      document.getElementById("annualOut").textContent = money(monthlyTotal * 12);
       document.getElementById("mobileMonthlyOut").textContent = money(monthlyTotal);
-      document.getElementById("termOut").textContent = `Annual estimate: ${money(monthlyTotal * 12)} (monthly prices paid yearly)`;
+      document.getElementById("termOut").textContent = "Monthly list prices are shown alongside the annual amount paid over 12 months.";
       document.getElementById("interactedTierOut").textContent = `Interacted: ${interactedCalc.name}`;
       document.getElementById("interactedDetailOut").textContent = interactedCalc.units
-        ? `${fmtNumber.format(includedInteracted)} included + ${interactedCalc.units} x ${fmtNumber.format(interactedCalc.packSize)} add-on packs at ${money(interactedCalc.price)} = ${fmtNumber.format(interactedCalc.entitledCapacity)} interacted-person entitlement, supporting up to ${fmtNumber.format(interactedCalc.entitledCapacity * 10)} interactions per month.`
-        : `${fmtNumber.format(includedInteracted)} included in the tenant license, supporting up to ${fmtNumber.format(includedInteracted * 10)} interactions per month; no add-on packs required.`;
+        ? `${fmtNumber.format(includedInteracted)} included + ${interactedCalc.units} x ${fmtNumber.format(interactedCalc.packSize)} add-on packs at ${money(interactedCalc.price)} = ${fmtNumber.format(interactedCalc.entitledCapacity)} interacted-person entitlement, covering up to ${fmtNumber.format(interactedCalc.entitledCapacity * 10)} interactions.`
+        : `${fmtNumber.format(includedInteracted)} included in the tenant license, covering up to ${fmtNumber.format(includedInteracted * 10)} interactions; no add-on packs required.`;
       document.getElementById("unifiedTierOut").textContent = `Unified: ${unifiedCalc.name}`;
       document.getElementById("unifiedDetailOut").textContent = unifiedCalc.units
         ? `${fmtNumber.format(includedUnified)} included + ${unifiedCalc.units} x ${fmtNumber.format(unifiedCalc.packSize)} add-on packs at ${money(unifiedCalc.price)} = ${fmtNumber.format(unifiedCalc.entitledCapacity)} total entitlement.`
         : `${fmtNumber.format(includedUnified)} included in the tenant license; no add-on packs required.`;
       document.getElementById("methodOut").textContent =
-        `Required interacted capacity is the busiest-month interaction total (${fmtNumber.format(peakInteractions)}) divided by 10, rounded up (${fmtNumber.format(interactionCapacity)}). ${attachConfirmed ? "" : "Attach eligibility is unconfirmed, so standard tenant pricing is used."}`;
+        `Required interacted capacity is the total interactions entered (${fmtNumber.format(totalInteractions)}) divided by 10, rounded up (${fmtNumber.format(interactionCapacity)}). ${attachConfirmed ? "" : "Attach eligibility is unconfirmed, so standard tenant pricing is used."}`;
       document.getElementById("databaseStorageOut").textContent = `${fmtStorage.format(storage.database)} GB`;
       document.getElementById("fileStorageOut").textContent = `${fmtStorage.format(storage.file)} GB`;
       document.getElementById("logStorageOut").textContent = `${fmtStorage.format(storage.log)} GB`;
@@ -1543,7 +1547,7 @@
 
       return {
         interactedPeople,
-        peakInteractions,
+        totalInteractions,
         interactionCapacity,
         unifiedProfiles,
         tenantCost,
@@ -1603,7 +1607,7 @@
         el.attachEligible.checked = false;
         el.includedInteracted.value = 10000;
         el.includedUnified.value = 100000;
-        el.peakInteractionsOverride.value = 0;
+        el.totalInteractions.value = 0;
         el.unifiedProfiles.value = 0;
         setOfficialPrices();
         updatePricingMode();
@@ -1627,7 +1631,7 @@
           `Annual total: ${money(result.monthlyTotal * 12)} (paid yearly)`,
           `Tenant license: ${result.licenseName} at ${money(result.tenantCost)}`,
           `Required interacted capacity: ${fmtNumber.format(result.interactedPeople)}`,
-          `Interaction usage: ${fmtNumber.format(result.peakInteractions)} total interactions in the busiest month`,
+          `Total interactions: ${fmtNumber.format(result.totalInteractions)}`,
           `Interacted add-ons: ${result.interactedCalc.name}, ${result.interactedCalc.units} packs, ${money(result.interactedCost)}`,
           `Unified profiles: ${fmtNumber.format(result.unifiedProfiles)}`,
           `Unified add-ons: ${result.unifiedCalc.name}, ${result.unifiedCalc.units} packs, ${money(result.unifiedCost)}`,
